@@ -21,5 +21,18 @@ shallowly — notes them, writes them down, moves on.
 - For substrate design: the body handles operational work, the brain reasons. Brain context
   is reserved for thinking, not managing.
 - Added as a design constraint in DESIGN.md ("The Cognitive Load Constraint")
-- When in thinking mode and conclusions need to be committed to files, dispatch a background scribe agent with specific instructions. Continue reasoning in the main conversation. The agent transcribes; it doesn't decide.
+- When in thinking mode and conclusions need to be committed to files, dispatch a background
+  scribe agent with specific instructions. Continue reasoning in the main conversation.
+  The agent transcribes; it doesn't decide.
 - This is now codified in CLAUDE.md under "Thinking and Writing"
+
+**Refinement (session 2): the i/j problem.**
+Re-reading already-loaded content is false productivity. The brain re-reads because it's
+easy and feels thorough, but the problem is never "do I have the information?" — it's
+"am I thinking deeply enough about what the information means?" Before reaching for any
+tool, ask what variable you're incrementing:
+- "Making sure I have the info" → you already have it. Think, don't read.
+- "Updating the artifact" → is the conclusion ready, or are you writing to feel productive?
+- "Re-reading to refresh" → refresh WHAT, specifically? If you can't name it, you're spinning.
+The mechanical fix is think/write separation. The deeper fix is catching the displacement
+before it starts — noticing the urge to reach for a tool and interrogating it.
