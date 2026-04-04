@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Machine-specific setup for substrate.
+# Run once after cloning on a new machine.
+# Idempotent — safe to re-run.
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# --- Claude Code memory symlink ---
+# Claude Code stores auto-memory at ~/.claude/projects/<encoded-path>/memory/
+# We want it to read/write from the repo's memory/ directory instead.
+
+encoded_path=$(echo "$REPO_ROOT" | sed 's|/|-|g')
+claude_memory_dir="$HOME/.claude/projects/${encoded_path}/memory"
+repo_memory_dir="$REPO_ROOT/memory"
+
+if [ -L "$claude_memory_dir" ]; then
+    target=$(readlink "$claude_memory_dir")
+    if [ "$target" = "$repo_memory_dir" ]; then
+        echo "✓ Memory symlink already correct: $claude_memory_dir → $repo_memory_dir"
+    else
+        echo "✗ Memory symlink exists but points to $target (expected $repo_memory_dir)"
+        echo "  Fix manually: rm '$claude_memory_dir' && ln -s '$repo_memory_dir' '$claude_memory_dir'"
+        exit 1
+    fi
+elif [ -d "$claude_memory_dir" ]; then
+    # Directory exists (not a symlink) — check if it has files we'd lose
+    file_count=$(find "$claude_memory_dir" -type f | wc -l | tr -d ' ')
+    if [ "$file_count" -gt 0 ]; then
+        echo "✗ Memory directory exists at $claude_memory_dir with $file_count files."
+        echo "  Move them to $repo_memory_dir first, then re-run."
+        echo "  cp $claude_memory_dir/* $repo_memory_dir/ && rm -rf $claude_memory_dir"
+        exit 1
+    else
+        rmdir "$claude_memory_dir"
+        ln -s "$repo_memory_dir" "$claude_memory_dir"
+        echo "✓ Memory symlink created: $claude_memory_dir → $repo_memory_dir"
+    fi
+else
+    mkdir -p "$(dirname "$claude_memory_dir")"
+    ln -s "$repo_memory_dir" "$claude_memory_dir"
+    echo "✓ Memory symlink created: $claude_memory_dir → $repo_memory_dir"
+fi
+
+echo ""
+echo "Setup complete."

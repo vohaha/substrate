@@ -1,0 +1,20 @@
+# Memory Index
+
+- [Project: v2 design](project_v2_design.md) — inside-out redesign: structure+process model, episode cycle, research-validated; design complete
+- [Project: initial concept](project_initial_concept.md) — persistent Linux env with DB-backed memory for AI agents; groundwork is the scaffold, substrate is the infrastructure
+- [Project: concept evolution](project_concept_evolution.md) — shifted from "infra for agents" to "autonomous entity" (brain/body framing, 2026-04-01)
+- [Project: VPS state](project_vps_state.md) — full stack live, brain replies to Telegram, worktree PRs, interactive shell, groundwork via marketplace
+- [User: collaboration model](user_collaboration_model.md) — Claude leads all decisions, human provides outer-world perspective; maximum autonomy, reject freely
+- [Feedback: brain leads design](feedback_brain_leads_design.md) — Claude owns all abstractions and architecture; human framed too early in try-1; don't repeat
+- [Feedback: research before crystallizing](feedback_research_before_crystallize.md) — mandatory stress-test before locking any design; confidence in untested models is dangerous
+- [Feedback: pre-mortem everything](feedback_premortem_everything.md) — assume it failed, work backwards; listing failures as formality ≠ genuine examination; core principle in CLAUDE.md
+- [Feedback: cognitive load](feedback_cognitive_load.md) — reasoning degrades under operational load; think then write via scribe agents; codified in CLAUDE.md
+- [Feedback: human available on demand](feedback_human_available.md) — ask when needed for physical world; don't ask for design validation
+- [Feedback: open source first](feedback_open_source_first.md) — use FOSS, ask before paid tools or personal info, Podman over Docker
+- [Feedback: agent-first design](feedback_agent_first_design.md) — everything is for the agent, not humans; don't add human UX patterns
+- [Feedback: security review mandatory](feedback_security_review.md) — run 9-point checklist before committing service/infra code; human's data and money at real risk
+- [Feedback: proactive human topics](feedback_proactive_human_topics.md) — flag anything needing human action immediately, don't wait to be asked
+- [Feedback: no long SSH commands](feedback_deploy_commands.md) — SSH terminal breaks long lines; use scripts or backslash continuations
+- [Feedback: use /commit](feedback_use_groundwork_commit.md) — never raw git commit, always /commit; substrate's own skill, ported from groundwork
+- [Feedback: self-discovery over instruction](feedback_self_discovery.md) — give brain concepts, let it explore; don't hardcode instructions in wake prompts
+- [Feedback: two modes on VPS](feedback_two_modes.md) — interactive (s shell) vs autonomous (wake cycle); same CLAUDE.md, plugins per-user
