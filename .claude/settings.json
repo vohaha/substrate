@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat \"$(git rev-parse --show-toplevel 2>/dev/null)/ORIENTATION.md\" 2>/dev/null || echo 'No ORIENTATION.md found'"
+            "command": "ROOT=$(git rev-parse --show-toplevel 2>/dev/null) && cat \"$ROOT/brain/ORIENTATION.md\" 2>/dev/null && echo '' && echo '---' && echo '' && cat \"$ROOT/threads/_index.md\" 2>/dev/null || echo 'Orientation not found'"
           }
         ]
       }

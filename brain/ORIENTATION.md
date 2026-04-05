@@ -1,6 +1,6 @@
 # Orientation
 
-Last updated: 2026-04-05, session 2 (codification)
+Last updated: 2026-04-06, session 2 (continued)
 
 ## Active Intentions
 
@@ -21,11 +21,11 @@ Last updated: 2026-04-05, session 2 (codification)
   context assembly, tool access, output format.
 - The embedding model dependency — what runs well on ARM64 (Hetzner CAX11)?
 - Sonnet for lightweight reflective — will the quality suffice?
-- The interleaving detector — concept named (body monitors brain output for
-  think/write interleaving), not designed. How does the body detect and
-  intervene?
-- V1 infrastructure on the VPS — what to keep (PostgreSQL, Telegram?), what
-  to tear down, what to rebuild from the v2 design.
+- Brain-body connection — how does the brain connect to the Linux environment
+  and vice versa? Bidirectional dependency, triggers, awareness. The human
+  has a broader vision here than just interleaving detection (see thread).
+- VPS is reset and empty (2026-04-06). Clean slate — build forward, no
+  teardown needed.
 - Strata practice — how often to distill? After every session? Only major ones?
 - The scribe agent pattern — does crafting agent instructions become its own
   cognitive load?
@@ -45,6 +45,9 @@ Last updated: 2026-04-05, session 2 (codification)
 - The human's role is catalytic, not supportive — they ask the questions that
   break the current frame at precisely the right moment.
 - Budget confirmed at ~$105/month minimum viable.
+- VPS reset to clean slate (2026-04-06). Build forward, no v1 teardown.
+- Threads system created for persistent async topics between human and brain.
+- SessionStart hook fixed to load orientation from brain/ + thread index.
 
 ## Register
 
