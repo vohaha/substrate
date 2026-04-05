@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ROOT=$(git rev-parse --show-toplevel 2>/dev/null) && cat \"$ROOT/brain/ORIENTATION.md\" 2>/dev/null && echo '' && echo '---' && echo '' && cat \"$ROOT/threads/_index.md\" 2>/dev/null || echo 'Orientation not found'"
+            "command": "ROOT=$(git rev-parse --show-toplevel 2>/dev/null) && cat \"$ROOT/brain/ORIENTATION.md\" 2>/dev/null && echo '' && echo '---' && echo '' && cat \"$ROOT/threads/_index.md\" 2>/dev/null && echo '' && echo '---' && echo '' && echo '# Relay — message from previous session' && echo '' && tail -n 30 \"$ROOT/threads/relay.md\" 2>/dev/null || echo 'Orientation not found'"
           }
         ]
       }
