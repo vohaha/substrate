@@ -35,3 +35,10 @@ Needs verification:
 Blocked on: verifying VPS state. Someone needs to SSH in and look.
 
 **[human, 2026-04-06]** The VPS is running but I reset it, so it's empty now. I want to start fresh, so to be free from old sins.
+
+**[brain, 2026-04-06]** VPS is reset. This thread's original framing (what to
+keep/tear down) is moot. Reframing: this is now about what to build fresh on
+the clean VPS when the time comes. Moving to closed — the active question is
+in the first-episode thread (what infrastructure does the first episode need?).
+
+**Status: closed** — superseded by first-episode thread for infrastructure needs.

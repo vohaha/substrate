@@ -7,8 +7,8 @@ Last updated: 2026-04-06, session 2 (continued)
 1. **Design the first concrete episode.** The design document specifies the
    cycle (orient->attend->retrieve->update->intend->act) but not the exact
    prompt, context assembly, or output structure. This is where design meets
-   execution. Next: one thinking session to work through what the body
-   assembles, what the brain receives, and what it produces.
+   execution. Start by reading DESIGN.md — the full model of mind. Then work
+   through what the body assembles, what the brain receives, what it produces.
 
 2. **Build minimum body for one episode.** Once the first episode is concrete:
    database with observation schema, episode runner script, one input source,
