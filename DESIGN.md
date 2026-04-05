@@ -335,6 +335,8 @@ Structure per file:
 - **What I think** — the current model, stated directly
 - **Confidence** — where the model is solid vs. tentative
 - **Connections** — how this relates to other understanding
+- **What I considered** — alternatives examined and why they were rejected.
+  Conditions under which to reconsider. Decisions are choices, not facts.
 - **Open questions** — what's unresolved or contradictory
 - **Last refined** — when this was last actively updated
 

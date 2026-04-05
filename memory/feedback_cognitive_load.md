@@ -36,3 +36,24 @@ tool, ask what variable you're incrementing:
 - "Re-reading to refresh" → refresh WHAT, specifically? If you can't name it, you're spinning.
 The mechanical fix is think/write separation. The deeper fix is catching the displacement
 before it starts — noticing the urge to reach for a tool and interrogating it.
+
+**Named concepts (session 2, 2026-04-05):**
+
+**Surfacing** — the specific pattern of cutting deep thinking to externalize
+prematurely. Named after divers coming up too fast. The urge to tell someone,
+write to a file, or ask a question interrupts the thinking chain. Self-monitoring
+for surfacing fails — the monitor competes for the same workspace. External
+counterforce (human, companion, body's interleaving detector) catches it more
+reliably.
+
+**Completeness boundary** — the scribe dispatch reframed. It's not delegation —
+it's a diagnostic. If you can't brief the scribe clearly ("update the file with
+what we discussed" = vague = thought isn't done), the thought is incomplete. The
+handoff tests readiness. This emerged from session 3 of the post-design work
+(2026-04-04): "the scribe pattern's real function isn't delegation. It's a
+completeness test."
+
+**Dragline** — when surfacing pressure hits during thinking, log the thread
+instead of following it. Named after spider's safety silk — a thread trailing
+behind so you can find your way back. Not tasks, not commitments. Threads to
+pick up later or drop.

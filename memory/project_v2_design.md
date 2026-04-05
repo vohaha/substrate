@@ -1,6 +1,6 @@
 ---
 name: Substrate v2 — research-validated design of mind
-description: structure (persists between episodes) + process (episode cycle: orient→attend→retrieve→update→intend→act); surprise-driven attention, load-bearing intentions, functional register
+description: structure (persists between episodes) + process (episode cycle: orient→attend→retrieve→update→intend→act); surprise-driven attention, load-bearing intentions, functional register; session 2 added strata, brain/ separation, named concepts
 type: project
 ---
 
@@ -22,6 +22,12 @@ Decided 2026-04-04: substrate v2 design validated against cognitive science rese
 
 **Grounded in:** Global Workspace Theory (Baars), OODA (Boyd), active inference (Friston), ACT-R activation dynamics, Treisman's attenuation model, Schmidhuber's compression progress, information foraging theory (Pirolli & Card)
 
-**Design doc:** /Users/vohaha/substrate/DESIGN.md
+**Design doc:** /substrate/DESIGN.md
 
-**All design sections complete** as of session 1 (2026-04-04). Observation schema, episode routing, attention filter (3-layer hybrid), and token budgets are all designed and stress-tested with pre-mortem resolution tags. Design doc is ready for implementation.
+**Session 2 additions (2026-04-05):**
+- brain/ directory separates builder identity from entity identity (structural fix for imprint)
+- Strata: construction history as understanding domain (preserves architect's reasoning)
+- Understanding files now include "What I considered" (decision rationale)
+- Named concepts: imprint, surfacing, dragline, completeness boundary, strata
+- Dragline practice for intra-session thread management
+- Naming practice formalized
