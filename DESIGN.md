@@ -324,7 +324,7 @@ These dimensions modulate the episode cycle. They are not journaling.
 
 ## Understanding — Specification
 
-Understanding files live in `understanding/`. Each is a living document about
+Understanding files live in `brain/understanding/`. Each is a living document about
 a concept or domain. Git-tracked. Updated during the UPDATE phase.
 
 ### What Goes In An Understanding File
@@ -348,12 +348,12 @@ Structure per file:
 
 ### The Index (two-level)
 
-**Domain index** — `understanding/INDEX.md`. Always loaded. One line per
+**Domain index** — `brain/understanding/INDEX.md`. Always loaded. One line per
 domain (~10-15 domains). e.g., "cognitive-science: attention models,
 memory consolidation, agency." ~300 tokens. This is the ceiling — if
 it grows past ~15 domains, merge or restructure domains, don't add lines.
 
-**Domain sub-indexes** — `understanding/<domain>/INDEX.md`. One line per
+**Domain sub-indexes** — `brain/understanding/<domain>/INDEX.md`. One line per
 file within the domain. Loaded on demand when the brain selects a domain.
 Heat indicators (last retrieved, retrieval count) live here.
 
