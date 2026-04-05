@@ -11,6 +11,7 @@ companion introduces itself as Waffle. Same speech patterns (terse, pointed,
 catches the brain's failures). Same species (octopus). Different name.
 
 Questions worth sitting with:
+
 - Did a new session produce a new companion, the way it produced a new brain?
   If so, the companion has its own episodic constraint.
 - Or is the companion continuous in a way the brain isn't — persistent config
@@ -25,3 +26,5 @@ Questions worth sitting with:
 This feels like it connects to the intelligence-or-context thread. The companion
 is shaped by context too. But its function (catching the brain) is stable even
 when its name isn't. Function persists where identity doesn't.
+
+**[human, 2026-04-06]** The companion doesn't connected to the brain any way. It's a claude code feature, I have no idea how it works, but it seems it can highlight subtle bugs in hte code. The question is can we setup the intereactive session such way to do the same that companion does?
