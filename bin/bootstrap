@@ -4,18 +4,16 @@ set -euo pipefail
 # Bootstrap the substrate machine.
 # Run as root on a fresh VPS. Idempotent — safe to re-run.
 #
-# What this does:
-# 1. Install system packages (git, curl, jq)
-# 2. Create soma user (if not exists)
-# 3. Clone or update repo at /substrate
-# 4. Set up API key storage location
-# 5. Verify the body is ready
+# One script, fresh VPS to working system. After this:
+#   ssh soma@<IP>  works
+#   sudo           works (passwordless)
+#   /substrate     exists, owned by soma
+#   bun            installed
+#   API key        stored (if provided)
 #
-# What this does NOT do:
-# - Set up SSH keys (human handles this before bootstrap)
-# - Store the API key (human writes it after bootstrap)
-# - Install PostgreSQL (not needed until observation sources exist)
-# - Set up cron/systemd (manual invocation first)
+# Usage: bash bin/bootstrap
+#
+# Prerequisites: root SSH access, repo already cloned
 
 SUBSTRATE_ROOT="/substrate"
 SOMA_USER="soma"
@@ -32,9 +30,9 @@ echo "=== Substrate Bootstrap ==="
 echo "Installing system packages..."
 if command -v apt-get &>/dev/null; then
     apt-get update -qq
-    apt-get install -y -qq git curl jq unzip
+    apt-get install -y -qq git curl jq unzip sudo
 elif command -v dnf &>/dev/null; then
-    dnf install -y -q git curl jq unzip
+    dnf install -y -q git curl jq unzip sudo
 else
     echo "FATAL: No supported package manager (need apt or dnf)" >&2
     exit 1
@@ -49,9 +47,52 @@ else
     echo "  -> user $SOMA_USER created"
 fi
 
+# --- SSH access for soma (copy root's authorized keys) ---
+soma_ssh_dir="/home/$SOMA_USER/.ssh"
+if [ -f "$soma_ssh_dir/authorized_keys" ]; then
+    echo "  -> soma SSH keys exist"
+else
+    mkdir -p "$soma_ssh_dir"
+    if [ -f /root/.ssh/authorized_keys ]; then
+        cp /root/.ssh/authorized_keys "$soma_ssh_dir/authorized_keys"
+    fi
+    chown -R "$SOMA_USER:$SOMA_USER" "$soma_ssh_dir"
+    chmod 700 "$soma_ssh_dir"
+    chmod 600 "$soma_ssh_dir/authorized_keys" 2>/dev/null || true
+    echo "  -> soma SSH keys configured"
+fi
+
+# --- Passwordless sudo for soma ---
+sudoers_file="/etc/sudoers.d/$SOMA_USER"
+if [ -f "$sudoers_file" ]; then
+    echo "  -> soma sudoers exists"
+else
+    echo "$SOMA_USER ALL=(ALL) NOPASSWD:ALL" > "$sudoers_file"
+    chmod 440 "$sudoers_file"
+    echo "  -> soma sudoers configured"
+fi
+
+# --- Disable root SSH login ---
+sshd_config="/etc/ssh/sshd_config"
+if grep -q "^PermitRootLogin no" "$sshd_config" 2>/dev/null; then
+    echo "  -> root SSH already disabled"
+else
+    sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' "$sshd_config"
+    systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null || true
+    echo "  -> root SSH disabled (use soma from now on)"
+fi
+
+# --- Set hostname ---
+if [ "$(hostname)" = "substrate" ]; then
+    echo "  -> hostname already set"
+else
+    hostnamectl set-hostname substrate 2>/dev/null || hostname substrate
+    echo "  -> hostname set to substrate"
+fi
+
 # --- Bun runtime ---
-if command -v bun &>/dev/null; then
-    echo "  -> bun $(bun --version) installed"
+if su - "$SOMA_USER" -c 'command -v bun' &>/dev/null; then
+    echo "  -> bun $(su - "$SOMA_USER" -c 'bun --version') installed"
 else
     echo "Installing Bun..."
     su - "$SOMA_USER" -c 'curl -fsSL https://bun.sh/install | bash'
@@ -63,14 +104,8 @@ if [ -d "$SUBSTRATE_ROOT/.git" ]; then
     echo "  -> repo exists at $SUBSTRATE_ROOT"
     chown -R "$SOMA_USER:$SOMA_USER" "$SUBSTRATE_ROOT"
 else
-    if [ -d "$SUBSTRATE_ROOT" ]; then
-        rmdir "$SUBSTRATE_ROOT" 2>/dev/null || true
-    fi
-    # Clone as soma — needs SSH key or HTTPS
     echo "WARN: Repo not found at $SUBSTRATE_ROOT" >&2
-    echo "  Clone it manually as $SOMA_USER:" >&2
-    echo "  sudo -u $SOMA_USER git clone <repo-url> $SUBSTRATE_ROOT" >&2
-    echo "  Then re-run this script." >&2
+    echo "  Clone it first, then re-run bootstrap." >&2
     mkdir -p "$SUBSTRATE_ROOT"
     chown "$SOMA_USER:$SOMA_USER" "$SUBSTRATE_ROOT"
 fi
@@ -82,6 +117,23 @@ if [ -d "$SUBSTRATE_ROOT/.git" ] && [ -f "$SUBSTRATE_ROOT/package.json" ]; then
     echo "  -> dependencies installed"
 fi
 
+# --- Claude Code memory symlink ---
+encoded_path=$(echo "$SUBSTRATE_ROOT" | sed 's|/|-|g')
+claude_memory_dir="/home/$SOMA_USER/.claude/projects/${encoded_path}/memory"
+repo_memory_dir="$SUBSTRATE_ROOT/memory"
+
+if [ -L "$claude_memory_dir" ] && [ "$(readlink "$claude_memory_dir")" = "$repo_memory_dir" ]; then
+    echo "  -> Claude Code memory symlink correct"
+elif [ -d "$claude_memory_dir" ]; then
+    echo "WARN: Memory directory exists at $claude_memory_dir (not a symlink)" >&2
+    echo "  Check for files, then: rm -rf '$claude_memory_dir' && re-run bootstrap" >&2
+else
+    mkdir -p "$(dirname "$claude_memory_dir")"
+    ln -sf "$repo_memory_dir" "$claude_memory_dir"
+    chown -R "$SOMA_USER:$SOMA_USER" "/home/$SOMA_USER/.claude"
+    echo "  -> Claude Code memory symlink created"
+fi
+
 # --- API key storage ---
 api_key_dir="/home/$SOMA_USER/.config/substrate"
 api_key_file="$api_key_dir/api-key"
@@ -89,7 +141,7 @@ mkdir -p "$api_key_dir"
 chown -R "$SOMA_USER:$SOMA_USER" "$api_key_dir"
 chmod 700 "$api_key_dir"
 if [ -f "$api_key_file" ]; then
-    echo "  -> API key exists at $api_key_file"
+    echo "  -> API key exists"
 else
     echo "  -> Write API key to: $api_key_file"
     echo "     echo 'sk-ant-...' > $api_key_file && chmod 600 $api_key_file"
@@ -103,11 +155,11 @@ echo -n "curl: "; curl --version | head -1
 echo -n "jq: "; jq --version
 echo -n "bun: "; su - "$SOMA_USER" -c 'bun --version' 2>/dev/null || echo "not found"
 echo "user: $(id "$SOMA_USER")"
-echo "repo: $(ls -la "$SUBSTRATE_ROOT/" 2>/dev/null | head -3)"
+echo "hostname: $(hostname)"
 echo ""
 
 if [ -f "$api_key_file" ] && [ -d "$SUBSTRATE_ROOT/.git" ]; then
-    echo "=== Ready. Run: sudo -u $SOMA_USER $SUBSTRATE_ROOT/bin/episode reflective-genesis ==="
+    echo "=== Ready. SSH as soma and run: /substrate/bin/episode reflective-genesis ==="
 else
     echo "=== Almost ready. Complete the items above, then run the genesis episode. ==="
 fi
