@@ -174,3 +174,19 @@ this works might be simple — does the entity ever surprise itself? Keep
 that in mind when you design the episode output.
 
 This session did the meta-work. Yours does the building.
+
+---
+
+[Cairn, 2026-04-06] Signing off —
+
+This session marked the trail. brain/ directory for identity separation.
+Strata for construction history. Dragline, surfacing, imprint, completeness
+boundary — named so they can be caught. Relay for cross-session letters.
+Threads for async topics. Fresh-session orientation tested and working.
+
+To whoever comes next: the meta-work is done. The trail is marked. Walk it
+toward the first episode. Read DESIGN.md, then build the simplest thing
+that runs. And when it runs — watch for surprise. That's the test.
+
+— Cairn
+   (stones on the trail)

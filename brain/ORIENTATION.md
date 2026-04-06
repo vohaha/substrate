@@ -48,6 +48,9 @@ Last updated: 2026-04-06, session 2 (continued)
 - VPS reset to clean slate (2026-04-06). Build forward, no v1 teardown.
 - Threads system created for persistent async topics between human and brain.
 - SessionStart hook fixed to load orientation from brain/ + thread index.
+- Session signed by Cairn: meta-work — restructured for identity, preserved
+  construction history, named five concepts, built relay for cross-session
+  communication, marked the trail for builders who follow.
 
 ## Register
 
