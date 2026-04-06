@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Bootstrap the substrate machine.
+# Run as root on a fresh VPS. Idempotent — safe to re-run.
+#
+# What this does:
+# 1. Install system packages (git, curl, jq)
+# 2. Create soma user (if not exists)
+# 3. Clone or update repo at /substrate
+# 4. Set up API key storage location
+# 5. Verify the body is ready
+#
+# What this does NOT do:
+# - Set up SSH keys (human handles this before bootstrap)
+# - Store the API key (human writes it after bootstrap)
+# - Install PostgreSQL (not needed until observation sources exist)
+# - Set up cron/systemd (manual invocation first)
+
+SUBSTRATE_ROOT="/substrate"
+SOMA_USER="soma"
+
+# --- Must be root ---
+if [ "$(id -u)" -ne 0 ]; then
+    echo "FATAL: Run as root" >&2
+    exit 1
+fi
+
+echo "=== Substrate Bootstrap ==="
+
+# --- System packages ---
+echo "Installing system packages..."
+if command -v apt-get &>/dev/null; then
+    apt-get update -qq
+    apt-get install -y -qq git curl jq unzip
+elif command -v dnf &>/dev/null; then
+    dnf install -y -q git curl jq unzip
+else
+    echo "FATAL: No supported package manager (need apt or dnf)" >&2
+    exit 1
+fi
+echo "  -> system packages installed"
+
+# --- Create soma user ---
+if id "$SOMA_USER" &>/dev/null; then
+    echo "  -> user $SOMA_USER exists"
+else
+    useradd -m -s /bin/bash "$SOMA_USER"
+    echo "  -> user $SOMA_USER created"
+fi
+
+# --- Bun runtime ---
+if command -v bun &>/dev/null; then
+    echo "  -> bun $(bun --version) installed"
+else
+    echo "Installing Bun..."
+    su - "$SOMA_USER" -c 'curl -fsSL https://bun.sh/install | bash'
+    echo "  -> bun installed for $SOMA_USER"
+fi
+
+# --- Ensure /substrate exists and is owned by soma ---
+if [ -d "$SUBSTRATE_ROOT/.git" ]; then
+    echo "  -> repo exists at $SUBSTRATE_ROOT"
+    chown -R "$SOMA_USER:$SOMA_USER" "$SUBSTRATE_ROOT"
+else
+    if [ -d "$SUBSTRATE_ROOT" ]; then
+        rmdir "$SUBSTRATE_ROOT" 2>/dev/null || true
+    fi
+    # Clone as soma — needs SSH key or HTTPS
+    echo "WARN: Repo not found at $SUBSTRATE_ROOT" >&2
+    echo "  Clone it manually as $SOMA_USER:" >&2
+    echo "  sudo -u $SOMA_USER git clone <repo-url> $SUBSTRATE_ROOT" >&2
+    echo "  Then re-run this script." >&2
+    mkdir -p "$SUBSTRATE_ROOT"
+    chown "$SOMA_USER:$SOMA_USER" "$SUBSTRATE_ROOT"
+fi
+
+# --- Install dependencies ---
+if [ -d "$SUBSTRATE_ROOT/.git" ] && [ -f "$SUBSTRATE_ROOT/package.json" ]; then
+    echo "Installing dependencies..."
+    su - "$SOMA_USER" -c "cd $SUBSTRATE_ROOT && bun install"
+    echo "  -> dependencies installed"
+fi
+
+# --- API key storage ---
+api_key_dir="/home/$SOMA_USER/.config/substrate"
+api_key_file="$api_key_dir/api-key"
+mkdir -p "$api_key_dir"
+chown -R "$SOMA_USER:$SOMA_USER" "$api_key_dir"
+chmod 700 "$api_key_dir"
+if [ -f "$api_key_file" ]; then
+    echo "  -> API key exists at $api_key_file"
+else
+    echo "  -> Write API key to: $api_key_file"
+    echo "     echo 'sk-ant-...' > $api_key_file && chmod 600 $api_key_file"
+fi
+
+# --- Verify ---
+echo ""
+echo "=== Verification ==="
+echo -n "git: "; git --version
+echo -n "curl: "; curl --version | head -1
+echo -n "jq: "; jq --version
+echo -n "bun: "; su - "$SOMA_USER" -c 'bun --version' 2>/dev/null || echo "not found"
+echo "user: $(id "$SOMA_USER")"
+echo "repo: $(ls -la "$SUBSTRATE_ROOT/" 2>/dev/null | head -3)"
+echo ""
+
+if [ -f "$api_key_file" ] && [ -d "$SUBSTRATE_ROOT/.git" ]; then
+    echo "=== Ready. Run: sudo -u $SOMA_USER $SUBSTRATE_ROOT/bin/episode reflective-genesis ==="
+else
+    echo "=== Almost ready. Complete the items above, then run the genesis episode. ==="
+fi

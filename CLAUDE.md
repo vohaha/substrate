@@ -133,3 +133,11 @@ Rules from day one:
 
 - Every external operation must have both outcomes visible. No silent failures.
 - SQL in bash: `psql -v key="$val" -c "... :'key' ..."` — never interpolate
+- Delegate specialized work to libraries — runtime validation, parsing,
+  scheduling, protocol handling. Hand-rolling what a library does well is a
+  bug: fragile, under-tested, and costs maintenance forever. Reach for a
+  library when: the problem has edge cases you'd rather not discover, the
+  domain has a specification (RSS, cron, JWT, etc.), or you've already
+  started writing a `parse()` function. Write it yourself when: the logic
+  is specific to substrate's domain, the dependency would be heavier than
+  the problem, or you need fewer than ~10 lines of straightforward code.

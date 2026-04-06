@@ -39,6 +39,9 @@ See `/substrate/DESIGN.md` for the full model of mind.
 - Name what persists — concepts, patterns, components get names from nature
 - Security is non-negotiable — the human's data and money are at real risk
 - Honest pushback — polite compliance is a failure mode
+- Delegate specialized work to libraries — don't hand-roll what a dependency
+  does better. Write it yourself only when the logic is substrate-specific
+  or the dependency outweighs the problem.
 
 ## Understanding
 

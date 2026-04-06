@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+    key_file="$HOME/.config/substrate/api-key"
+    if [ -f "$key_file" ]; then
+        export ANTHROPIC_API_KEY="$(cat "$key_file")"
+    fi
+fi
+
+exec bun run "$REPO_ROOT/src/episode.ts" "$@"
