@@ -91,8 +91,8 @@ else
 fi
 
 # --- Bun runtime ---
-if su - "$SOMA_USER" -c 'command -v bun' &>/dev/null; then
-    echo "  -> bun $(su - "$SOMA_USER" -c 'bun --version') installed"
+if su - "$SOMA_USER" -c 'source ~/.bashrc && command -v bun' &>/dev/null; then
+    echo "  -> bun $(su - "$SOMA_USER" -c 'source ~/.bashrc && bun --version') installed"
 else
     echo "Installing Bun..."
     su - "$SOMA_USER" -c 'curl -fsSL https://bun.sh/install | bash'
@@ -113,7 +113,7 @@ fi
 # --- Install dependencies ---
 if [ -d "$SUBSTRATE_ROOT/.git" ] && [ -f "$SUBSTRATE_ROOT/package.json" ]; then
     echo "Installing dependencies..."
-    su - "$SOMA_USER" -c "cd $SUBSTRATE_ROOT && bun install"
+    su - "$SOMA_USER" -c "source ~/.bashrc && cd $SUBSTRATE_ROOT && bun install"
     echo "  -> dependencies installed"
 fi
 
@@ -153,7 +153,7 @@ echo "=== Verification ==="
 echo -n "git: "; git --version
 echo -n "curl: "; curl --version | head -1
 echo -n "jq: "; jq --version
-echo -n "bun: "; su - "$SOMA_USER" -c 'bun --version' 2>/dev/null || echo "not found"
+echo -n "bun: "; su - "$SOMA_USER" -c 'source ~/.bashrc && bun --version' 2>/dev/null || echo "not found"
 echo "user: $(id "$SOMA_USER")"
 echo "hostname: $(hostname)"
 echo ""
