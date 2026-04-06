@@ -74,7 +74,9 @@ fi
 
 # --- Disable root SSH login ---
 sshd_config="/etc/ssh/sshd_config"
-if grep -q "^PermitRootLogin no" "$sshd_config" 2>/dev/null; then
+if [ ! -f "$sshd_config" ]; then
+    echo "  -> no sshd_config (container? skipping)"
+elif grep -q "^PermitRootLogin no" "$sshd_config" 2>/dev/null; then
     echo "  -> root SSH already disabled"
 else
     sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' "$sshd_config"
@@ -86,7 +88,7 @@ fi
 if [ "$(hostname)" = "substrate" ]; then
     echo "  -> hostname already set"
 else
-    hostnamectl set-hostname substrate 2>/dev/null || hostname substrate
+    hostnamectl set-hostname substrate 2>/dev/null || hostname substrate 2>/dev/null || echo "  -> hostname change failed (container?)"
     echo "  -> hostname set to substrate"
 fi
 
