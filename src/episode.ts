@@ -11,7 +11,7 @@ const REPO_ROOT = join(import.meta.dirname, "..");
 const BRAIN_DIR = join(REPO_ROOT, "brain");
 const LOG_DIR = join(REPO_ROOT, "logs");
 const MODEL = "claude-sonnet-4-20250514";
-const MAX_TOKENS = 8192;
+const MAX_TOKENS = 32768;
 
 // --- Episode log ---
 // Every episode leaves a record. Success or failure. Stderr is for the
@@ -112,7 +112,7 @@ const output: EpisodeOutput = {
 };
 let brainToolsUsed = 0;
 
-const MAX_TURNS = 20;
+const MAX_TURNS = 40;
 let turn = 0;
 
 while (turn < MAX_TURNS) {
