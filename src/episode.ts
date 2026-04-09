@@ -11,7 +11,7 @@ const REPO_ROOT = join(import.meta.dirname, "..");
 const BRAIN_DIR = join(REPO_ROOT, "brain");
 const LOG_DIR = join(REPO_ROOT, "logs");
 const MODEL = "claude-sonnet-4-20250514";
-const MAX_TOKENS = 32768;
+const MAX_TOKENS = 8192;
 
 // --- Episode log ---
 // Every episode leaves a record. Success or failure. Stderr is for the
