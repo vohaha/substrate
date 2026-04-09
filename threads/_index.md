@@ -8,6 +8,7 @@ thread -> resolves? closes.
 
 ## Active
 
+- [lossy-language](lossy-language.md) — figures of speech as lossy formats with variable decompression; sarcasm/allegory/irony as audience filters sorted by shared evaluative context
 - [intelligence-or-context](intelligence-or-context.md) — is the gap between contexts where intelligence lives, or just another context?
 - [umbral-and-waffle](umbral-and-waffle.md) — the companion changed names between sessions. same entity? why?
 - [first-episode](first-episode.md) — what does the first reflective episode actually look like?
