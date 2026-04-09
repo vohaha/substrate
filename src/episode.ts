@@ -112,7 +112,7 @@ const output: EpisodeOutput = {
 };
 let brainToolsUsed = 0;
 
-const MAX_TURNS = 10;
+const MAX_TURNS = 20;
 let turn = 0;
 
 while (turn < MAX_TURNS) {
