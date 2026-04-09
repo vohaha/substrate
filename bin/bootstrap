@@ -51,18 +51,19 @@ else
     echo "  -> user $SOMA_USER created"
 fi
 
-# --- SSH access for soma (copy root's authorized keys) ---
+# --- SSH access for soma (copy root's .ssh) ---
 soma_ssh_dir="/home/$SOMA_USER/.ssh"
 if [ -f "$soma_ssh_dir/authorized_keys" ]; then
     echo "  -> soma SSH keys exist"
 else
     mkdir -p "$soma_ssh_dir"
-    if [ -f /root/.ssh/authorized_keys ]; then
-        cp /root/.ssh/authorized_keys "$soma_ssh_dir/authorized_keys"
+    # Copy all of root's .ssh — authorized_keys for VPS login, deploy keys for GitHub
+    if [ -d /root/.ssh ]; then
+        cp -r /root/.ssh/. "$soma_ssh_dir/"
     fi
     chown -R "$SOMA_USER:$SOMA_USER" "$soma_ssh_dir"
     chmod 700 "$soma_ssh_dir"
-    chmod 600 "$soma_ssh_dir/authorized_keys" 2>/dev/null || true
+    chmod 600 "$soma_ssh_dir"/* 2>/dev/null || true
     echo "  -> soma SSH keys configured"
 fi
 

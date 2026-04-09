@@ -4,6 +4,12 @@ set -euo pipefail
 # Store the Anthropic API key and export it in the shell.
 # Usage: set-key sk-ant-...
 
+if [ "$(id -u)" -eq 0 ]; then
+    echo "FATAL: Run as soma, not root. The key must be stored in soma's home." >&2
+    echo "  ssh soma@<IP> && /substrate/bin/set-key sk-ant-..." >&2
+    exit 1
+fi
+
 key="${1:-}"
 if [ -z "$key" ]; then
     echo "Usage: set-key sk-ant-..." >&2
