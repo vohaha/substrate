@@ -15,7 +15,8 @@ export const tools: Anthropic.Messages.Tool[] = [
       "Rewrite the orientation file. This is your continuity — your state of mind " +
       "for the next episode. First person, under 1500 tokens. Include: active " +
       "intentions (2-3), open edges, recent shifts, register " +
-      "(certainty/focus/energy/curiosity).",
+      "(certainty/focus/energy/curiosity). " +
+      "Do NOT include domain index content here — use update_domain_index for that.",
     input_schema: {
       type: "object" as const,
       properties: {
