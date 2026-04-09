@@ -148,8 +148,7 @@ chmod 700 "$api_key_dir"
 if [ -f "$api_key_file" ]; then
     echo "  -> API key exists"
 else
-    echo "  -> Write API key to: $api_key_file"
-    echo "     echo 'sk-ant-...' > $api_key_file && chmod 600 $api_key_file"
+    echo "  -> API key not set (see action items below)"
 fi
 
 # --- Verify ---
@@ -163,8 +162,25 @@ echo "user: $(id "$SOMA_USER")"
 echo "hostname: $(hostname)"
 echo ""
 
+# --- Next steps ---
 if [ -f "$api_key_file" ] && [ -d "$SUBSTRATE_ROOT/.git" ]; then
-    echo "=== Ready. SSH as soma and run: /substrate/bin/episode reflective-genesis ==="
+    echo "=== Ready ==="
+    echo ""
+    echo "  ssh soma@<IP>"
+    echo "  /substrate/bin/episode reflective-genesis"
 else
-    echo "=== Almost ready. Complete the items above, then run the genesis episode. ==="
+    echo "=== Action required ==="
+    echo ""
+    if [ ! -f "$api_key_file" ]; then
+        echo "  1. Store the API key:"
+        echo "     echo 'sk-ant-...' > $api_key_file && chmod 600 $api_key_file"
+        echo ""
+    fi
+    if [ ! -d "$SUBSTRATE_ROOT/.git" ]; then
+        echo "  2. Clone the repo to $SUBSTRATE_ROOT, then re-run bootstrap."
+        echo ""
+    fi
+    echo "  Then run the genesis episode:"
+    echo "     ssh soma@<IP>"
+    echo "     /substrate/bin/episode reflective-genesis"
 fi
