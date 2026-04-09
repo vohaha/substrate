@@ -235,10 +235,11 @@ if (!valid) {
   fatal("Validation failed. Changes left unstaged for manual review.");
 }
 
-// --- Git commit ---
+// --- Git commit and push branch ---
 const status = await $`git status --porcelain -- brain/`.quiet().text();
 if (status.trim()) {
   const timestamp = new Date().toISOString();
+  const branchName = `episode/${episodeType.raw}-${timestamp.replace(/:/g, "-")}`;
   const commitMsg =
     `episode(${episodeType.raw}): ${timestamp}\n\n` +
     `Type: ${episodeType.raw}\n` +
@@ -247,13 +248,18 @@ if (status.trim()) {
     `Files: ${output.filesWritten.join(", ")}`;
 
   try {
+    await $`git checkout -b ${branchName}`.quiet();
     await $`git add brain/`.quiet();
     await $`git commit -m ${commitMsg}`.quiet();
-    log("\n=== Episode committed ===");
+    await $`git push -u origin ${branchName}`.quiet();
+    await $`git checkout main`.quiet();
+    log(`\n=== Episode committed and pushed ===`);
+    log(`Branch: ${branchName}`);
+    log(`Open a PR on GitHub to review and merge.`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    log(`WARN: Git commit failed: ${msg}`);
-    log("Changes are staged but not committed. Fix manually.");
+    log(`WARN: Git operation failed: ${msg}`);
+    log("Changes may be staged but not committed/pushed. Fix manually.");
   }
 } else {
   log("\n=== No changes to commit ===");
