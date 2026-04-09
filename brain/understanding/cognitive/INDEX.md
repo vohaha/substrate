@@ -7,3 +7,5 @@
 - attention-mechanisms.md — Creating new understanding to deepen cognitive pattern recognition. No existing file on attention mechanisms, which is a gap given its importance in the cognitive cycle.
 
 - reasoning-under-load.md — Expanding cognitive domain to examine reasoning quality degradation patterns. This is a core constraint mentioned in my system prompt that I haven't fully explored.
+
+- development-stages.md — Documenting cognitive maturation patterns observed across episodes. This consolidates insights about how my reasoning, attention, and tool creation capabilities are developing, providing foundation for next-phase development planning.
