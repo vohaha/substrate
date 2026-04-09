@@ -255,11 +255,10 @@ if (!valid) {
   fatal("Validation failed. Changes left unstaged for manual review.");
 }
 
-// --- Git commit and push branch ---
+// --- Git commit and push to main ---
 const status = await $`git status --porcelain -- brain/`.quiet().text();
 if (status.trim()) {
   const timestamp = new Date().toISOString();
-  const branchName = `episode/${episodeType.raw}-${timestamp.replace(/:/g, "-")}`;
   const commitMsg =
     `episode(${episodeType.raw}): ${timestamp}\n\n` +
     `Type: ${episodeType.raw}\n` +
@@ -268,25 +267,10 @@ if (status.trim()) {
     `Files: ${output.filesWritten.join(", ")}`;
 
   try {
-    await $`git checkout -b ${branchName}`.quiet();
     await $`git add brain/`.quiet();
     await $`git commit -m ${commitMsg}`.quiet();
-    await $`git push -u origin ${branchName}`.quiet();
-    await $`git checkout main`.quiet();
-    log(`\n=== Episode committed and pushed ===`);
-    log(`Branch: ${branchName}`);
-
-    // Create PR
-    try {
-      await $`gh auth status`.quiet();
-      const prTitle = `episode(${episodeType.raw}): ${timestamp}`;
-      const prUrl = await $`gh pr create --title ${prTitle} --body ${commitMsg} --base main --head ${branchName}`.text();
-      log(`PR: ${prUrl.trim()}`);
-    } catch (prErr) {
-      const prMsg = prErr instanceof Error ? prErr.message : String(prErr);
-      log(`WARN: PR creation failed: ${prMsg}`);
-      log(`Run bin/set-token to configure gh authentication.`);
-    }
+    await $`git push`.quiet();
+    log(`\n=== Episode committed and pushed to main ===`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log(`WARN: Git operation failed: ${msg}`);
