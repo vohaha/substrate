@@ -1,7 +1,8 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { type } from "arktype";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
+import { RESERVED_NAMES, BRAIN_TOOLS_DIR, importBrainTool } from "./brain-tools.ts";
 
 const BRAIN_DIR = join(import.meta.dirname, "..", "brain");
 const UNDERSTANDING_DIR = join(BRAIN_DIR, "understanding");
@@ -115,6 +116,42 @@ export const tools: Anthropic.Messages.Tool[] = [
       required: ["reason"],
     },
   },
+  {
+    name: "evolve",
+    description:
+      "Create, update, or delete a brain tool. Tools persist as TypeScript " +
+      "files in brain/tools/ and are loaded every episode. The source must " +
+      "export `definition` (Anthropic.Messages.Tool) and `handler` " +
+      "(async (input: Record<string, unknown>) => Promise<string>). " +
+      "Cannot modify built-in tools. Full Node/Bun APIs available via import.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        action: {
+          type: "string",
+          enum: ["create", "update", "delete"],
+          description: "What to do.",
+        },
+        name: {
+          type: "string",
+          description:
+            "Tool name. Lowercase with underscores. Becomes brain/tools/<name>.ts.",
+        },
+        rationale: {
+          type: "string",
+          description: "Why this tool is being created, changed, or removed.",
+        },
+        source: {
+          type: "string",
+          description:
+            "Full TypeScript source code. Required for create/update. " +
+            "Must export `definition` (Anthropic.Messages.Tool) and " +
+            "`handler` (async (input: Record<string, unknown>) => Promise<string>).",
+        },
+      },
+      required: ["action", "name", "rationale"],
+    },
+  },
 ];
 
 // --- Domain sub-index maintenance ---
@@ -179,6 +216,12 @@ const understandingSchema = type({
 const domainIndexSchema = type({ rationale: "string", content: "string" });
 const draglineSchema = type({ thread: "string" });
 const escalateSchema = type({ reason: "string" });
+const evolveSchema = type({
+  action: "'create' | 'update' | 'delete'",
+  name: "string",
+  rationale: "string",
+  "source?": "string",
+});
 
 function parseOrThrow<T>(
   result: T | import("arktype").type.errors,
@@ -193,7 +236,7 @@ export async function handleToolCall(
   block: Anthropic.Messages.ToolUseBlock,
   output: EpisodeOutput,
   log: (msg: string) => void,
-): Promise<{ result: string; isError: boolean }> {
+): Promise<{ result: string; isError: boolean } | null> {
   try {
     switch (block.name) {
       case "update_orientation": {
@@ -244,9 +287,57 @@ export async function handleToolCall(
         return { result: "escalation flagged", isError: false };
       }
 
+      case "evolve": {
+        const { action, name, rationale, source } = parseOrThrow(
+          evolveSchema(block.input),
+        );
+
+        if (RESERVED_NAMES.has(name)) {
+          return { result: `error: '${name}' is a reserved built-in tool`, isError: true };
+        }
+
+        let safeName = sanitize(name);
+        if (safeName.endsWith(".ts")) safeName = safeName.slice(0, -3);
+        const toolsDir = BRAIN_TOOLS_DIR;
+        const filePath = join(toolsDir, `${safeName}.ts`);
+
+        if (action === "delete") {
+          try {
+            await unlink(filePath);
+            log(`Evolved: deleted tool ${safeName} (${rationale})`);
+            output.filesWritten.push(`brain/tools/${safeName}.ts`);
+            return { result: `deleted brain/tools/${safeName}.ts`, isError: false };
+          } catch {
+            return { result: `error: tool '${safeName}' not found`, isError: true };
+          }
+        }
+
+        if (!source) {
+          return { result: "error: source is required for create/update", isError: true };
+        }
+
+        await mkdir(toolsDir, { recursive: true });
+        await writeFile(filePath, source + "\n");
+
+        // Validate by importing — catches syntax errors and missing exports
+        try {
+          await importBrainTool(filePath);
+        } catch (err) {
+          await unlink(filePath);
+          const msg = err instanceof Error ? err.message : String(err);
+          return { result: `error: tool validation failed: ${msg}`, isError: true };
+        }
+
+        log(`Evolved: ${action}d tool ${safeName} (${rationale})`);
+        output.filesWritten.push(`brain/tools/${safeName}.ts`);
+        return {
+          result: `${action}d brain/tools/${safeName}.ts — available next turn`,
+          isError: false,
+        };
+      }
+
       default:
-        log(`WARN: Unknown tool: ${block.name}`);
-        return { result: `error: unknown tool '${block.name}'`, isError: true };
+        return null;
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

@@ -76,7 +76,10 @@ export async function assembleContext(
 
   const system = `${identity.trim()}\n\n---\n\n${episodePrompt.trim()}`;
 
-  const userMessage = `## Current Orientation\n\n${orientation.trim()}\n\n## Domain Index\n\n${domainIndex.trim()}\n\n## Observations\n\n${observations}`;
+  let userMessage = `## Current Orientation\n\n${orientation.trim()}\n\n## Domain Index\n\n${domainIndex.trim()}`;
+  if (observations.trim()) {
+    userMessage += `\n\n## Observations\n\n${observations}`;
+  }
 
   return { system, userMessage };
 }

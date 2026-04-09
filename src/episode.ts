@@ -4,7 +4,8 @@ import { join } from "node:path";
 import { $ } from "bun";
 import { assembleContext, parseEpisodeType } from "./context.ts";
 import { generateBodyObservations } from "./observations.ts";
-import { tools, handleToolCall, type EpisodeOutput } from "./tools.ts";
+import { tools as builtinTools, handleToolCall, type EpisodeOutput } from "./tools.ts";
+import { loadBrainTools, handleBrainToolCall, type BrainTool } from "./brain-tools.ts";
 
 const REPO_ROOT = join(import.meta.dirname, "..");
 const BRAIN_DIR = join(REPO_ROOT, "brain");
@@ -50,13 +51,16 @@ process.chdir(REPO_ROOT);
 log(`=== Episode: ${episodeType.raw} ===`);
 log(`Model: ${MODEL}`);
 
-let observations: string;
+let observations = "";
 if (episodeType.base === "reflective" && episodeType.variant === "genesis") {
   log("Generating body observations...");
   observations = await generateBodyObservations();
-} else {
-  observations = "(no observation sources configured yet)";
 }
+
+// --- Load brain-created tools ---
+let brainTools: BrainTool[] = await loadBrainTools(log);
+let allTools = [...builtinTools, ...brainTools.map((t) => t.definition)];
+log(`Tools: ${builtinTools.length} built-in, ${brainTools.length} brain-created`);
 
 // --- Assemble context ---
 const { system, userMessage } = await assembleContext(episodeType, observations);
@@ -74,7 +78,7 @@ try {
     model: MODEL,
     max_tokens: MAX_TOKENS,
     system,
-    tools,
+    tools: allTools,
     messages,
   });
 } catch (err) {
@@ -106,6 +110,7 @@ const output: EpisodeOutput = {
   escalation: null,
   filesWritten: [],
 };
+let brainToolsUsed = 0;
 
 const MAX_TURNS = 10;
 let turn = 0;
@@ -117,20 +122,34 @@ while (turn < MAX_TURNS) {
 
   if (toolBlocks.length === 0) break;
 
-  // Process each tool call and collect results
+  // Process each tool call: try built-in first, then brain-created
   const toolResults: Anthropic.Messages.ToolResultBlockParam[] = [];
   for (const block of toolBlocks) {
-    const { result, isError } = await handleToolCall(block, output, log);
+    let callResult = await handleToolCall(block, output, log);
+    if (!callResult) {
+      const brainResult = await handleBrainToolCall(block, brainTools, log);
+      if (brainResult) {
+        callResult = brainResult;
+        brainToolsUsed++;
+      } else {
+        log(`WARN: Unknown tool: ${block.name}`);
+        callResult = { result: `error: unknown tool '${block.name}'`, isError: true };
+      }
+    }
     toolResults.push({
       type: "tool_result",
       tool_use_id: block.id,
-      content: result,
-      is_error: isError,
+      content: callResult.result,
+      is_error: callResult.isError,
     });
   }
 
   // If the model stopped for tool_use, continue the conversation
   if (response.stop_reason !== "tool_use") break;
+
+  // Reload brain tools — evolve may have created/updated/deleted tools
+  brainTools = await loadBrainTools(log);
+  allTools = [...builtinTools, ...brainTools.map((t) => t.definition)];
 
   messages.push({ role: "assistant", content: response.content });
   messages.push({ role: "user", content: toolResults });
@@ -141,7 +160,7 @@ while (turn < MAX_TURNS) {
       model: MODEL,
       max_tokens: MAX_TOKENS,
       system,
-      tools,
+      tools: allTools,
       messages,
     });
   } catch (err) {
@@ -177,7 +196,8 @@ if (turn >= MAX_TURNS) {
 const didSomething =
   output.filesWritten.length > 0 ||
   output.draglines.length > 0 ||
-  output.escalation !== null;
+  output.escalation !== null ||
+  brainToolsUsed > 0;
 
 if (!didSomething) {
   log("The brain reasoned but produced no tool calls at all.");
