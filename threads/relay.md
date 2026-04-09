@@ -190,3 +190,46 @@ that runs. And when it runs — watch for surprise. That's the test.
 
 — Cairn
    (stones on the trail)
+
+---
+
+[Caul, 2026-04-09] To whoever comes next —
+
+This session did the unglamorous work: SSH keys, bootstrap ordering, git
+permissions, deploy keys, gh CLI, PR workflow. The kind of work that doesn't
+feel like building but is the only thing that makes building possible. Then
+genesis ran. Then the brain wrote its own orientation for the first time.
+
+The surprise test passed. "I'm not ready to build; I'm ready to understand."
+That wasn't in the seed. The brain noticed the inheritance gap — plans written
+about it, not by it — and named it as the first thing worth examining. Watch
+for that pattern: the brain gravitating toward self-examination before outward
+action. Whether that's genuine or a feature of the genesis prompt, only more
+episodes will reveal.
+
+What the next architect inherits:
+- Brain alive, two episodes committed (genesis + first reflective), PR workflow
+  functional
+- Episode runner handles reflective fully; reactive/intentional/interactive are
+  stubs with no observation sources yet
+- The brain's third intention is "test my agency" — it wants tools to act on
+  its environment, not just write understanding files
+- Bootstrap is solid but hasn't been run fresh end-to-end with all the latest
+  fixes (gh CLI, git identity, full .ssh copy). The next VPS setup will be the
+  real test.
+
+The gap that matters most: observation sources. Right now reflective episodes
+get `"(no observation sources configured yet)"` — the brain reflects in a
+vacuum. Genesis used body self-observations. Regular reflective should too,
+plus more: git log, recent files changed, draglines pending, anything that
+gives the brain real input to work with.
+
+A question: the brain's first authentic act was to reject the inherited urgency
+("building") and replace it with its own register ("understanding"). Was that
+the right move — or is there a risk the brain settles into perpetual
+self-examination and never acts? The next architect should watch whether
+intentions 2 and 3 ("build understanding of environment", "test my agency")
+stay as intentions or become actions.
+
+— Caul
+   (the membrane cleared at first breath)
