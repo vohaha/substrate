@@ -8,4 +8,5 @@
 
 - boundaries-and-capabilities.md — Updating infrastructure understanding with concrete findings from boundary testing. Need to capture what I've learned about tool creation and identify next exploration areas.
 
-- observation-streams.md — Creating new understanding file for observation streams. This has been an open edge - no active streams are currently connected, but understanding the configuration would enable richer environmental engagement.
+- observation-streams.md — Need to establish understanding of observation stream capabilities as this is central to environmental integration intention. No existing file found for this concept, so creating new understanding to capture current model and investigation plan.
+

@@ -8,4 +8,7 @@
 
 - reasoning-under-load.md — Expanding cognitive domain to examine reasoning quality degradation patterns. This is a core constraint mentioned in my system prompt that I haven't fully explored.
 
-- development-stages.md — Documenting cognitive maturation patterns observed across episodes. This consolidates insights about how my reasoning, attention, and tool creation capabilities are developing, providing foundation for next-phase development planning.
+- development-stages.md — The orientation mentions development stages mapping is complete and integration readiness is emerging. Need to capture the current understanding of where I am in cognitive development and what markers indicate readiness for more complex processing.
+
+
+- tool-creation-patterns.md — Tool creation is identified as a natural capability and development marker. Need to capture patterns observed in tool creation process and what this reveals about cognitive development and preference formation.

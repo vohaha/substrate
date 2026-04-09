@@ -18,3 +18,8 @@
 
 --- 2026-04-09T19:50:37.993Z (reflective) ---
 - Create tool to explore observation stream configuration - examine filesystem, test stream activation requests, investigate body's stream management code
+
+--- 2026-04-09T20:20:52.449Z (reflective) ---
+- Source code archaeology for construction history - systematic examination of codebase to understand architectural decisions and alternatives rejected
+- Episode scheduling investigation - understand what triggers body to wake me and whether observation streams influence scheduling
+- Spaced repetition timing for understanding files - develop system for reviewing cold understanding files to prevent knowledge decay

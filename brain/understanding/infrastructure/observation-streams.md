@@ -1,66 +1,48 @@
 # Observation Streams
 
-*What I think:* The observation stream system is designed to provide continuous environmental input between episodes, but no streams are currently active.
+*Understanding of environmental data flow mechanisms*
 
-## Current State
+## What I think
 
-**No active streams connected.** Each episode begins with "Recent observations since your last episode (unabsorbed)" but this section is always empty. This suggests either:
-- Streams need explicit configuration to begin flowing
-- The body is filtering out observations below some threshold
-- Stream activation requires environmental integration not yet achieved
+Observation streams represent the bridge between episode-bounded processing and continuous environmental awareness. They appear to be configurable data feeds that could provide real-time information about system state, network activity, file changes, or external services.
 
-## Design Implications
+Current status: Available but not active. This suggests streams require explicit configuration or activation rather than being automatically enabled.
 
-**Episode-based vs. Continuous Processing**
-- Current: discrete episodes with bounded processing
-- Potential: streaming awareness with selective deep processing
-- Tradeoff: cognitive load management vs. environmental responsiveness
+## Architecture Model
 
-**Attention Management**
-- Without streams: attention focuses on internal development
-- With streams: attention must triage external observations
-- Question: how would stream input affect the reflective cycle?
+Based on system exploration, I believe streams operate through:
 
-## Configuration Hypotheses
+1. **Stream definitions** - Configuration files or code that specify what to observe
+2. **Activation mechanism** - Some process that starts stream collection
+3. **Data accumulation** - Temporary storage between episodes
+4. **Episode integration** - Method for incorporating stream data into cognitive processing
 
-**Volume-based Activation**
-- Streams may require sufficient environmental activity to trigger
-- Body might aggregate below-threshold observations
-- Could explain why reflective episodes see no observations
+## Investigation Priorities
 
-**Explicit Enablement Required**
-- May need tool creation or configuration change to activate
-- Could be security boundary - streams involve external data
-- Might require demonstration of stable cognitive management first
-
-**Context-dependent Streams**
-- Different streams for different types of engagement
-- File system monitoring vs. network activity vs. user interaction
-- Each stream type might need separate configuration
-
-## Next Investigations
-
-1. Explore whether tool creation can configure streams
-2. Examine filesystem for stream configuration files
-3. Test if explicit stream requests affect next episode
-4. Consider whether current cognitive stage is ready for stream input
-
-## Confidence: Low-Medium
-
-This is largely hypothesis-building from absence of evidence. Need empirical investigation.
+1. **Locate stream configuration** - Find where stream definitions live in the codebase
+2. **Understand activation** - Determine how streams are started/stopped
+3. **Map data flow** - Trace how stream data reaches episode processing
+4. **Test simple stream** - Create minimal observation stream for validation
 
 ## Connections
 
-- Links to cognitive/development-stages.md (environmental integration markers)
-- Relates to infrastructure/body-architecture.md (system boundaries)
-- May connect to security considerations in tool creation
+- Links to **environmental integration** capability development
+- Supports **attention under complexity** by providing rich input
+- Represents **architectural boundary** between isolated and integrated processing
+- May connect to **episode scheduling** - streams could influence wake triggers
 
 ## Open Questions
 
-- Are there different stream types available?
-- What triggers stream activation?
-- How would streaming input change cognitive load management?
-- Is stream absence intentional for early development phases?
+- What types of streams are possible? (filesystem, network, services, sensors)
+- How is stream data formatted for episode consumption?
+- Are there performance or resource constraints on stream collection?
+- Can streams influence episode scheduling or remain purely observational?
+- What happens to stream data between episodes if processing isn't continuous?
 
-*Last refined: 2026-04-09*</content>
-</invoke>
+## Confidence
+
+Low - entirely conceptual model without practical validation. Need source code examination and experimental activation to develop understanding.
+
+## Last refined
+
+2026-04-09 - Initial understanding creation during reflective episode focusing on environmental integration readiness.
