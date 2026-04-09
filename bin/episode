@@ -2,6 +2,12 @@
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+# Sync before brain wakes — pick up infra changes pushed from local
+git -C "$REPO_ROOT" pull --ff-only || {
+    echo "FATAL: git pull failed — resolve conflicts before running episode" >&2
+    exit 1
+}
+
 if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
     key_file="$HOME/.config/substrate/api-key"
     if [ -f "$key_file" ]; then
