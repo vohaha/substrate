@@ -255,7 +255,15 @@ if (status.trim()) {
     await $`git checkout main`.quiet();
     log(`\n=== Episode committed and pushed ===`);
     log(`Branch: ${branchName}`);
-    log(`Open a PR on GitHub to review and merge.`);
+
+    // Create PR if gh is available
+    try {
+      const prUrl = await $`gh pr create --title ${`episode(${episodeType.raw}): ${timestamp}`} --body ${commitMsg} --base main --head ${branchName}`.text();
+      log(`PR: ${prUrl.trim()}`);
+    } catch {
+      log(`PR creation skipped (gh not configured — run bin/set-token)`);
+      log(`Open a PR manually on GitHub.`);
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log(`WARN: Git operation failed: ${msg}`);

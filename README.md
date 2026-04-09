@@ -73,12 +73,15 @@ Root login is now disabled. Switch to soma:
 ssh soma@<VPS_IP>
 ```
 
-Store the API key:
+Store the API key and GitHub token:
 
 ```bash
 /substrate/bin/set-key sk-ant-...
+/substrate/bin/set-token ghp_...
 source ~/.bashrc
 ```
+
+The GitHub token needs `repo` scope so the brain can open PRs after each episode.
 
 ## Step 5 — Run the genesis episode
 

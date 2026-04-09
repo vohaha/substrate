@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Store the GitHub token for soma (used by gh CLI to create PRs).
+# Usage: set-token ghp_...
+
+if [ "$(id -u)" -eq 0 ]; then
+    echo "FATAL: Run as soma, not root. The token must be stored in soma's home." >&2
+    echo "  ssh soma@<IP> && /substrate/bin/set-token ghp_..." >&2
+    exit 1
+fi
+
+token="${1:-}"
+if [ -z "$token" ]; then
+    echo "Usage: set-token ghp_..." >&2
+    exit 1
+fi
+
+dir="$HOME/.config/substrate"
+mkdir -p "$dir"
+chmod 700 "$dir"
+printf '%s' "$token" > "$dir/github-token"
+chmod 600 "$dir/github-token"
+
+# Authenticate gh CLI with the token
+echo "$token" | gh auth login --with-token
+
+echo "  -> GitHub token stored and gh authenticated"
