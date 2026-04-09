@@ -9,6 +9,7 @@ set -euo pipefail
 #   sudo           works (passwordless)
 #   /substrate     exists, owned by soma
 #   bun            installed
+#   node + claude  installed (Claude Code CLI)
 #   API key        stored (if provided)
 #
 # Usage: bash bin/bootstrap
@@ -95,6 +96,17 @@ else
     echo "  -> hostname set to substrate"
 fi
 
+# --- Node.js + Claude Code ---
+if command -v claude &>/dev/null; then
+    echo "  -> claude $(claude --version 2>/dev/null || echo 'installed')"
+else
+    echo "Installing Node.js and Claude Code..."
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - >/dev/null 2>&1
+    apt-get install -y -qq nodejs
+    npm install -g @anthropic-ai/claude-code --quiet
+    echo "  -> Claude Code installed"
+fi
+
 # --- Bun runtime ---
 if su - "$SOMA_USER" -c 'test -x ~/.bun/bin/bun' &>/dev/null; then
     echo "  -> bun $(su - "$SOMA_USER" -c '~/.bun/bin/bun --version') installed"
@@ -157,6 +169,8 @@ echo "=== Verification ==="
 echo -n "git: "; git --version
 echo -n "curl: "; curl --version | head -1
 echo -n "jq: "; jq --version
+echo -n "node: "; node --version 2>/dev/null || echo "not found"
+echo -n "claude: "; claude --version 2>/dev/null || echo "not found"
 echo -n "bun: "; su - "$SOMA_USER" -c '~/.bun/bin/bun --version' 2>/dev/null || echo "not found"
 echo "user: $(id "$SOMA_USER")"
 echo "hostname: $(hostname)"
@@ -172,8 +186,8 @@ else
     echo "=== Action required ==="
     echo ""
     if [ ! -f "$api_key_file" ]; then
-        echo "  1. Store the API key:"
-        echo "     echo 'sk-ant-...' > $api_key_file && chmod 600 $api_key_file"
+        echo "  1. SSH as soma and store the API key:"
+        echo "     /substrate/bin/set-key sk-ant-..."
         echo ""
     fi
     if [ ! -d "$SUBSTRATE_ROOT/.git" ]; then

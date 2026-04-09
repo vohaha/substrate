@@ -56,39 +56,32 @@ Idempotent — safe to re-run. It will:
 - Give `soma` passwordless sudo
 - Disable root SSH login
 - Set hostname to `substrate`
+- Install Node.js and Claude Code CLI
 - Install Bun for `soma`
 - Fix ownership of `/substrate` to `soma`
 - Install Node dependencies (`bun install`)
 - Create the Claude Code memory symlink (`~/.claude/projects/.../memory` → `/substrate/memory`)
 - Create the API key directory at `~/.config/substrate/`
 
-## Step 4 — Store the API key
+## Step 4 — SSH in as soma and store the API key
 
-Bootstrap will print the exact path and command if the key isn't there yet:
-
-```bash
-echo 'sk-ant-YOUR_KEY_HERE' > /home/soma/.config/substrate/api-key
-chmod 600 /home/soma/.config/substrate/api-key
-```
-
-Do this as root before switching users, or as `soma` after.
-
-## Step 5 — Verify SSH access as soma
-
-From your local machine:
+Root login is now disabled. Switch to soma:
 
 ```bash
 ssh soma@<VPS_IP>
 ```
 
-Root login is now disabled. All subsequent access is via `soma`.
-
-## Step 6 — Run the genesis episode
+Store the API key:
 
 ```bash
-ssh soma@<VPS_IP>
-cd /substrate
-bin/episode reflective-genesis
+/substrate/bin/set-key sk-ant-...
+source ~/.bashrc
+```
+
+## Step 5 — Run the genesis episode
+
+```bash
+/substrate/bin/episode reflective-genesis
 ```
 
 The brain's first wake. Reads `brain/ORIENTATION.md`, assembles context, calls the API, and updates orientation with whatever it produces.
@@ -98,7 +91,6 @@ The brain's first wake. Reads `brain/ORIENTATION.md`, assembles context, calls t
 ## What bootstrap does NOT do
 
 - Set up any database — not needed yet
-- Configure Claude Code plugins or MCP servers — manual, per your setup
 - Generate SSH keys for `soma` to push back to git — add if you need the body to commit
 
 ## Troubleshooting
@@ -108,5 +100,5 @@ The brain's first wake. Reads `brain/ORIENTATION.md`, assembles context, calls t
 | `FATAL: Run as root` | Run with `sudo bash bin/bootstrap` or switch to root first |
 | `WARN: Repo not found at /substrate` | Clone the repo to `/substrate` before running bootstrap |
 | `WARN: Memory directory exists (not a symlink)` | Check for files in that dir, then `rm -rf` it and re-run |
-| `bun: command not found` during bootstrap | Fixed in bootstrap — uses full path `~/.bun/bin/bun` instead of relying on `source ~/.bashrc` |
-| Episode exits: no API key | Step 4 above |
+| `bun: command not found` during bootstrap | Fixed — bootstrap uses full path `~/.bun/bin/bun` |
+| Episode exits: no API key | Run `set-key` (Step 4) |

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Store the Anthropic API key and export it in the shell.
+# Usage: set-key sk-ant-...
+
+key="${1:-}"
+if [ -z "$key" ]; then
+    echo "Usage: set-key sk-ant-..." >&2
+    exit 1
+fi
+
+dir="$HOME/.config/substrate"
+mkdir -p "$dir"
+chmod 700 "$dir"
+printf '%s' "$key" > "$dir/api-key"
+chmod 600 "$dir/api-key"
+
+# Add export to bashrc so Claude Code picks it up in interactive sessions
+if ! grep -q 'substrate/api-key' "$HOME/.bashrc" 2>/dev/null; then
+    echo 'export ANTHROPIC_API_KEY=$(cat ~/.config/substrate/api-key)' >> "$HOME/.bashrc"
+fi
+
+echo "  -> API key stored"
+echo "     source ~/.bashrc  (or open a new shell)"
