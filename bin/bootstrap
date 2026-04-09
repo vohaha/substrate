@@ -128,6 +128,15 @@ else
     chown "$SOMA_USER:$SOMA_USER" "$SUBSTRATE_ROOT"
 fi
 
+# --- Git identity for soma ---
+if su - "$SOMA_USER" -c 'git config --global user.email' &>/dev/null; then
+    echo "  -> git identity exists"
+else
+    su - "$SOMA_USER" -c 'git config --global user.email "soma@substrate"'
+    su - "$SOMA_USER" -c 'git config --global user.name "soma"'
+    echo "  -> git identity configured"
+fi
+
 # --- Install dependencies ---
 if [ -d "$SUBSTRATE_ROOT/.git" ] && [ -f "$SUBSTRATE_ROOT/package.json" ]; then
     echo "Installing dependencies..."
