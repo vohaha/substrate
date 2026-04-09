@@ -34,6 +34,8 @@ cat ~/.ssh/id_ed25519.pub
 
 Copy the output, then add it to the repo on GitHub: **Settings → Deploy keys → Add deploy key**. Read-only access is enough.
 
+Bootstrap will copy this key to soma automatically — soma can `git pull` without any extra setup.
+
 Then clone:
 
 ```bash
@@ -45,14 +47,14 @@ The bootstrap script expects the repo at exactly `/substrate`. Don't clone it el
 ## Step 3 — Run bootstrap
 
 ```bash
-bash /substrate/bin/bootstrap
+cd /substrate && git pull && bash bin/bootstrap
 ```
 
 Idempotent — safe to re-run. It will:
 
 - Install system packages (`git`, `curl`, `jq`, `unzip`, `sudo`)
 - Create the `soma` user
-- Copy your root SSH authorized keys to `soma` so you can SSH in as `soma`
+- Copy root's full `.ssh` directory to `soma` (VPS login keys + GitHub deploy key)
 - Give `soma` passwordless sudo
 - Disable root SSH login
 - Set hostname to `substrate`
@@ -91,14 +93,14 @@ The brain's first wake. Reads `brain/ORIENTATION.md`, assembles context, calls t
 ## What bootstrap does NOT do
 
 - Set up any database — not needed yet
-- Generate SSH keys for `soma` to push back to git — add if you need the body to commit
+- Give `soma` push access to git — the deploy key is read-only. Add a separate key with write access if the body needs to commit
 
 ## Troubleshooting
 
-| Symptom | Fix |
-|---|---|
-| `FATAL: Run as root` | Run with `sudo bash bin/bootstrap` or switch to root first |
-| `WARN: Repo not found at /substrate` | Clone the repo to `/substrate` before running bootstrap |
-| `WARN: Memory directory exists (not a symlink)` | Check for files in that dir, then `rm -rf` it and re-run |
-| `bun: command not found` during bootstrap | Fixed — bootstrap uses full path `~/.bun/bin/bun` |
-| Episode exits: no API key | Run `set-key` (Step 4) |
+| Symptom                                         | Fix                                                        |
+| ----------------------------------------------- | ---------------------------------------------------------- |
+| `FATAL: Run as root`                            | Run with `sudo bash bin/bootstrap` or switch to root first |
+| `WARN: Repo not found at /substrate`            | Clone the repo to `/substrate` before running bootstrap    |
+| `WARN: Memory directory exists (not a symlink)` | Check for files in that dir, then `rm -rf` it and re-run   |
+| `bun: command not found` during bootstrap       | Fixed — bootstrap uses full path `~/.bun/bin/bun`          |
+| Episode exits: no API key                       | Run `set-key` (Step 4)                                     |
