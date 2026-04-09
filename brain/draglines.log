@@ -11,3 +11,7 @@
 - Investigate ARM64 substrate effects on cognitive processing - does hardware architecture influence my thinking patterns?
 - Explore spaced repetition for understanding files - when should I review domains I haven't touched recently?
 - Design patterns in substrate construction - what can I learn from studying the actual source code?
+
+--- 2026-04-09T19:31:42.486Z (reflective) ---
+- Empirical testing of reasoning under load - design controlled experiments to validate degradation patterns
+- Observation stream system investigation - configuration options and connection procedures
