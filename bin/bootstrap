@@ -26,6 +26,9 @@ fi
 
 echo "=== Substrate Bootstrap ==="
 
+# --- Allow root to operate on soma-owned repo ---
+git config --global --add safe.directory "$SUBSTRATE_ROOT" 2>/dev/null || true
+
 # --- System packages ---
 echo "Installing system packages..."
 if command -v apt-get &>/dev/null; then
