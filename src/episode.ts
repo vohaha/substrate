@@ -276,13 +276,16 @@ if (status.trim()) {
     log(`\n=== Episode committed and pushed ===`);
     log(`Branch: ${branchName}`);
 
-    // Create PR if gh is available
+    // Create PR
     try {
-      const prUrl = await $`gh pr create --title ${`episode(${episodeType.raw}): ${timestamp}`} --body ${commitMsg} --base main --head ${branchName}`.text();
+      await $`gh auth status`.quiet();
+      const prTitle = `episode(${episodeType.raw}): ${timestamp}`;
+      const prUrl = await $`gh pr create --title ${prTitle} --body ${commitMsg} --base main --head ${branchName}`.text();
       log(`PR: ${prUrl.trim()}`);
-    } catch {
-      log(`PR creation skipped (gh not configured — run bin/set-token)`);
-      log(`Open a PR manually on GitHub.`);
+    } catch (prErr) {
+      const prMsg = prErr instanceof Error ? prErr.message : String(prErr);
+      log(`WARN: PR creation failed: ${prMsg}`);
+      log(`Run bin/set-token to configure gh authentication.`);
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

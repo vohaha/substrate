@@ -178,7 +178,7 @@ fi
 api_key_dir="/home/$SOMA_USER/.config/substrate"
 api_key_file="$api_key_dir/api-key"
 mkdir -p "$api_key_dir"
-chown -R "$SOMA_USER:$SOMA_USER" "$api_key_dir"
+chown -R "$SOMA_USER:$SOMA_USER" "/home/$SOMA_USER/.config"
 chmod 700 "$api_key_dir"
 if [ -f "$api_key_file" ]; then
     echo "  -> API key exists"

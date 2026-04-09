@@ -134,8 +134,7 @@ export const tools: Anthropic.Messages.Tool[] = [
         },
         name: {
           type: "string",
-          description:
-            "Tool name. Lowercase with underscores. Becomes brain/tools/<name>.ts.",
+          description: "Tool name. Lowercase with underscores. Becomes brain/tools/<name>.ts.",
         },
         rationale: {
           type: "string",
@@ -156,11 +155,7 @@ export const tools: Anthropic.Messages.Tool[] = [
 
 // --- Domain sub-index maintenance ---
 
-async function updateSubIndex(
-  domainDir: string,
-  filename: string,
-  rationale: string,
-): Promise<void> {
+async function updateSubIndex(domainDir: string, filename: string, rationale: string): Promise<void> {
   const indexPath = join(domainDir, "INDEX.md");
   const domainName = domainDir.split("/").pop() ?? "unknown";
   let lines: string[];
@@ -223,9 +218,7 @@ const evolveSchema = type({
   "source?": "string",
 });
 
-function parseOrThrow<T>(
-  result: T | import("arktype").type.errors,
-): T {
+function parseOrThrow<T>(result: T | import("arktype").type.errors): T {
   if (result instanceof type.errors) {
     throw new Error(result.summary);
   }
@@ -249,9 +242,7 @@ export async function handleToolCall(
       }
 
       case "write_understanding": {
-        const { rationale, domain, filename, content } = parseOrThrow(
-          understandingSchema(block.input),
-        );
+        const { rationale, domain, filename, content } = parseOrThrow(understandingSchema(block.input));
         const safeDomain = sanitize(domain);
         const safeFilename = sanitize(filename);
         const dir = join(UNDERSTANDING_DIR, safeDomain);
@@ -288,9 +279,7 @@ export async function handleToolCall(
       }
 
       case "evolve": {
-        const { action, name, rationale, source } = parseOrThrow(
-          evolveSchema(block.input),
-        );
+        const { action, name, rationale, source } = parseOrThrow(evolveSchema(block.input));
 
         if (RESERVED_NAMES.has(name)) {
           return { result: `error: '${name}' is a reserved built-in tool`, isError: true };
