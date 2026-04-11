@@ -14,6 +14,7 @@ async function exec(cmd: string): Promise<string> {
 
 const REPO_ROOT = join(import.meta.dirname, "..");
 const BODY_FILE = join(REPO_ROOT, "body.md");
+const DRAGLINES_FILE = join(import.meta.dirname, "..", "brain", "draglines.log");
 
 async function generateBodyReport(): Promise<string> {
   const sections: string[] = [];
@@ -46,9 +47,7 @@ async function generateBodyReport(): Promise<string> {
   // Installed tools
   sections.push("", "## Installed Tools");
   const cmds = ["git", "curl", "jq", "bun", "psql", "python3", "node"];
-  const versions = await Promise.all(
-    cmds.map((cmd) => exec(`${cmd} --version 2>&1 | head -1`)),
-  );
+  const versions = await Promise.all(cmds.map((cmd) => exec(`${cmd} --version 2>&1 | head -1`)));
   for (let i = 0; i < cmds.length; i++) {
     sections.push(`${cmds[i]}: ${versions[i]}`);
   }
@@ -102,6 +101,15 @@ export async function generateObservations(log: (msg: string) => void): Promise<
 
   sections.push("--- Substrate root ---");
   sections.push(await exec("ls -la ."));
+  sections.push("");
+
+  sections.push("--- Draglines ---");
+  try {
+    const draglines = (await readFile(DRAGLINES_FILE, "utf-8")).trim();
+    sections.push(draglines || "(none)");
+  } catch {
+    sections.push("(none)");
+  }
   sections.push("");
 
   sections.push("--- System ---");

@@ -11,6 +11,7 @@ export interface BrainTool {
 }
 
 export const RESERVED_NAMES = new Set([
+  "read_file",
   "write_file",
   "note_dragline",
   "evolve",

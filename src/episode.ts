@@ -86,8 +86,10 @@ for (const block of response.content) {
 // --- Process tool calls (with continuation loop) ---
 log("\n=== Processing tool calls ===");
 const output: EpisodeOutput = {
+  filesRead: [],
   filesWritten: [],
   draglinesLogged: 0,
+  toolsEvolved: 0,
 };
 let brainToolsUsed = 0;
 
@@ -168,26 +170,27 @@ if (turn >= MAX_TURNS) {
 }
 
 // --- Check the brain actually did something ---
-const didSomething = output.filesWritten.length > 0 || brainToolsUsed > 0 || output.draglinesLogged > 0;
+const didSomething = output.filesRead.length > 0 || output.filesWritten.length > 0 || output.toolsEvolved > 0 || brainToolsUsed > 0 || output.draglinesLogged > 0;
 
 if (!didSomething) {
   log("The brain reasoned but produced no tool calls at all.");
-  fatal("Brain did nothing. No files written, no tools used.");
-}
-
-if (!output.filesWritten.includes("brain/ORIENTATION.md")) {
-  log("WARN: Brain did not update orientation.");
+  fatal("Brain did nothing. No files read, no tools used.");
 }
 
 // --- Git commit and push to main ---
 const status = await $`git status --porcelain -- brain/`.quiet().text();
+
+if (!output.filesWritten.includes("brain/ORIENTATION.md")) {
+  log("WARN: Brain did not update orientation.");
+}
 if (status.trim()) {
   const timestamp = new Date().toISOString();
   const commitMsg =
     `episode: ${timestamp}\n\n` +
     `Model: ${MODEL}\n` +
     `Tokens: ${response.usage.input_tokens} in, ${response.usage.output_tokens} out\n` +
-    `Files: ${output.filesWritten.join(", ")}`;
+    `Files written: ${output.filesWritten.join(", ")}\n` +
+    `Files read: ${output.filesRead.join(", ")}`;
 
   try {
     await $`git add brain/`.quiet();

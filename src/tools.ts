@@ -1,14 +1,35 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { type } from "arktype";
-import { mkdir, writeFile, appendFile, unlink } from "node:fs/promises";
-import { join } from "node:path";
+import { readFile, writeFile, appendFile, mkdir, unlink } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { RESERVED_NAMES, BRAIN_TOOLS_DIR, importBrainTool } from "./brain-tools.ts";
 
 const BRAIN_DIR = join(import.meta.dirname, "..", "brain");
+const REPO_ROOT = join(import.meta.dirname, "..");
 
 // --- Tool definitions ---
 
 export const tools: Anthropic.Messages.Tool[] = [
+  {
+    name: "read_file",
+    description:
+      "Read any file in the repository. Returns the file contents, " +
+      "capped at maxLines to prevent context overflow.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        path: {
+          type: "string",
+          description: "Path relative to the repository root.",
+        },
+        maxLines: {
+          type: "number",
+          description: "Maximum lines to return. Default 200.",
+        },
+      },
+      required: ["path"],
+    },
+  },
   {
     name: "write_file",
     description:
@@ -82,7 +103,7 @@ export const tools: Anthropic.Messages.Tool[] = [
   },
 ];
 
-// --- Sanitize path components ---
+// --- Sanitize path components (for evolve tool names) ---
 
 function sanitize(name: string): string {
   const clean = name.replace(/[^a-zA-Z0-9_.-]/g, "");
@@ -95,13 +116,16 @@ function sanitize(name: string): string {
 // --- Tool response handler ---
 
 export interface EpisodeOutput {
+  filesRead: string[];
   filesWritten: string[];
   draglinesLogged: number;
+  toolsEvolved: number;
 }
 
 // --- Input schemas ---
 
 const draglineSchema = type({ thought: "string" });
+const readFileSchema = type({ path: "string", "maxLines?": "number" });
 const writeFileSchema = type({ path: "string", content: "string" });
 const evolveSchema = type({
   action: "'create' | 'update' | 'delete'",
@@ -132,6 +156,37 @@ export async function handleToolCall(
         output.draglinesLogged++;
         log(`Dragline: ${thought.slice(0, 80)}`);
         return { result: "logged", isError: false };
+      }
+
+      case "read_file": {
+        const { path: relPath, maxLines } = parseOrThrow(readFileSchema(block.input));
+        const limit = maxLines ?? 200;
+        const fullPath = resolve(REPO_ROOT, relPath);
+
+        // Security: reject traversal outside repo
+        if (!fullPath.startsWith(REPO_ROOT + "/") && fullPath !== REPO_ROOT) {
+          return { result: "error: path escapes repository root", isError: true };
+        }
+
+        log(`Reading: ${relPath}`);
+        let content: string;
+        try {
+          content = await readFile(fullPath, "utf-8");
+        } catch {
+          return { result: `error: file not found: ${relPath}`, isError: true };
+        }
+
+        const lines = content.split("\n");
+        const truncated = lines.length > limit;
+        const result = lines.slice(0, limit).join("\n");
+        output.filesRead.push(relPath);
+
+        return {
+          result: truncated
+            ? `${result}\n\n--- truncated at ${limit}/${lines.length} lines ---`
+            : result,
+          isError: false,
+        };
       }
 
       case "write_file": {
@@ -177,7 +232,7 @@ export async function handleToolCall(
           try {
             await unlink(filePath);
             log(`Evolved: deleted tool ${safeName} (${rationale})`);
-            output.filesWritten.push(`brain/tools/${safeName}.ts`);
+            output.toolsEvolved++;
             return { result: `deleted brain/tools/${safeName}.ts`, isError: false };
           } catch {
             return { result: `error: tool '${safeName}' not found`, isError: true };
@@ -200,7 +255,7 @@ export async function handleToolCall(
         }
 
         log(`Evolved: ${action}d tool ${safeName} (${rationale})`);
-        output.filesWritten.push(`brain/tools/${safeName}.ts`);
+        output.toolsEvolved++;
         return {
           result: `${action}d brain/tools/${safeName}.ts — available next turn`,
           isError: false,

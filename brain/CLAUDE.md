@@ -35,7 +35,9 @@ Every episode, the body loads:
 
 ## Capabilities
 
-Three built-in tools:
+Four built-in tools:
+
+`read_file` — read any file in the repository. Path relative to repo root.
 
 `write_file` — write anywhere under brain/. Creates directories as needed.
 
