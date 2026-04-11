@@ -18,5 +18,7 @@ Create a structured git commit.
    - --intention "<text>"   # optional: which active intention this serves
    - --discovered "<text>"  # optional: non-obvious things found during the work
    - --open "<questions>"   # optional: unresolved decisions or questions
+   - --basis "<research>"   # REQUIRED for system-behavior files (src/, brain/CLAUDE.md, brain/prompts/, DESIGN.md, bin/episode)
+                            # format: "mechanism (source)" or "unresearched: hypothesis. risk: what could be wrong"
 
 $ARGUMENTS

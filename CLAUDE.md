@@ -117,10 +117,31 @@ Pick them up later or let them go. If a dragline persists across responses
 without being picked up, it either matters (promote to open edge in
 orientation) or it doesn't (drop it).
 
+## Research Basis Gate
+
+Every change to how the system works must cite its basis or explicitly mark
+the gap. This applies to any modification of brain behavior — code, prompts,
+tools, observation format, episode flow.
+
+**System-behavior files:** `src/`, `brain/CLAUDE.md`, `brain/prompts/`,
+`DESIGN.md`, `bin/episode`.
+
+When changing these files, every commit must include one of:
+- `Basis: <mechanism> (<source>)` — cited research or documented mechanism
+- `Unresearched: <hypothesis>. Risk: <what could be wrong>` — explicit gap
+
+If you're about to change how the system works and don't have a research
+basis — stop and research first. The cost of research is always less than
+the cost of implementing a flawed design. If the human explicitly chooses
+to skip research, document it as `Unresearched` so future sessions know.
+
+This gate exists because: prescribed cognitive structure caused a documented
+rumination loop (try-1). Confidence without evidence is the most dangerous
+state. See `brain/archive/try-1/README.md`.
+
 ## Development
 
 - Interactive sessions: edit directly, commit to current branch, push
-- Autonomous wakes: worktree, PR, human merges
 - Security review before committing anything that touches secrets,
   networking, auth, or external input
 - Commits: use `/commit` — structured format with Why, State, Discovered, Open.
