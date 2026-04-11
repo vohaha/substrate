@@ -75,12 +75,7 @@ infrastructure support. Claude is the primary stakeholder and decision-maker.
 - Never ask the human to paste secrets in chat
 - Before asking the human anything, check the system first
 
-## Cognitive Tools
-
-See `brain/CONCEPTS.md` — canonical home for all named reasoning patterns
-(thinking/writing modes, surfacing, completeness boundary, dragline,
-pre-mortem procedure, forge). Entity-owned, applies in both interactive and
-autonomous operating modes.
+@brain/CONCEPTS.md
 
 ## Research Basis Gate
 
