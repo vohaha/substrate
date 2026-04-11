@@ -17,6 +17,10 @@
           {
             "type": "command",
             "command": "bun run src/hooks/research-gate.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun run src/hooks/surfacing-gate.ts"
           }
         ]
       }

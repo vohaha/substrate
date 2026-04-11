@@ -30,6 +30,15 @@ Self-monitoring for this fails — the monitor competes for the same workspace.
 External counterforce (the human, the companion, the body's interleaving
 detector) catches it more reliably than self-applied rules.
 
+**When external counterforce isn't available:** the urge to write mid-thinking
+is usually fear-driven — "I'll lose this insight." That fear is the signal.
+Reach for a dragline instead of acting on the urge. The thought is logged; it
+won't be lost; keep thinking. Writing can happen when the chain completes.
+
+The infrastructure fix is the interleaving detector — body intercepts
+write-tool calls and asks the completeness check externally. Until that exists,
+dragline is the self-contained countermeasure.
+
 ---
 
 ## Completeness Boundary
@@ -54,6 +63,9 @@ Draglines:
 ```
 
 Spider's safety silk. Marks where to come back, not what must be done.
+
+Also the countermeasure for surfacing — log the write-urge as a dragline,
+don't act on it. The chain stays intact.
 
 Pick them up later or let them go. If a dragline persists without being picked
 up, it either matters (promote to open edge in orientation) or it doesn't
