@@ -88,6 +88,10 @@ export async function generateEpisodeObservations(): Promise<string> {
   sections.push(await exec("ls -la ."));
   sections.push("");
 
+  sections.push("--- Draglines ---");
+  sections.push(await exec("tail -30 brain/draglines.log"));
+  sections.push("");
+
   sections.push("--- System ---");
   sections.push(await exec("uptime"));
   sections.push(`Disk: ${await exec("df -h / | tail -1")}`);
