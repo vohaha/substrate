@@ -1,9 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { appendFile, readFile, writeFile, access } from "node:fs/promises";
 import { join } from "node:path";
 import { $ } from "bun";
 import { assembleContext } from "./context.ts";
-import { generateBodyObservations, generateEpisodeObservations } from "./observations.ts";
+import { generateObservations } from "./observations.ts";
 import { tools as builtinTools, handleToolCall, type EpisodeOutput } from "./tools.ts";
 import { loadBrainTools, handleBrainToolCall, type BrainTool } from "./brain-tools.ts";
 
@@ -33,26 +32,12 @@ function fatal(msg: string): never {
 // --- Set cwd to repo root ---
 process.chdir(REPO_ROOT);
 
-// --- Detect genesis (no orientation file) ---
-let isGenesis = false;
-try {
-  await access(join(BRAIN_DIR, "ORIENTATION.md"));
-  const content = await readFile(join(BRAIN_DIR, "ORIENTATION.md"), "utf-8");
-  // Treat empty or seed orientation as genesis
-  isGenesis = content.trim().length < 100;
-} catch {
-  isGenesis = true;
-}
-
 // --- Generate observations ---
 log(`=== Episode ===`);
 log(`Model: ${MODEL}`);
-log(`Genesis: ${isGenesis}`);
 
 log("Generating observations...");
-const observations = isGenesis
-  ? await generateBodyObservations()
-  : await generateEpisodeObservations();
+const observations = await generateObservations(log);
 
 // --- Load brain-created tools ---
 let brainTools: BrainTool[] = await loadBrainTools(log);
@@ -103,8 +88,6 @@ for (const block of response.content) {
 // --- Process tool calls (with continuation loop) ---
 log("\n=== Processing tool calls ===");
 const output: EpisodeOutput = {
-  draglines: [],
-  escalation: null,
   filesWritten: [],
 };
 let brainToolsUsed = 0;
@@ -186,42 +169,11 @@ if (turn >= MAX_TURNS) {
 }
 
 // --- Check the brain actually did something ---
-const didSomething =
-  output.filesWritten.length > 0 ||
-  output.draglines.length > 0 ||
-  output.escalation !== null ||
-  brainToolsUsed > 0;
+const didSomething = output.filesWritten.length > 0 || brainToolsUsed > 0;
 
 if (!didSomething) {
   log("The brain reasoned but produced no tool calls at all.");
-  fatal("Brain did nothing. No files, no draglines, no escalation.");
-}
-
-// --- Save draglines ---
-if (output.draglines.length > 0) {
-  const draglineFile = join(BRAIN_DIR, "draglines.log");
-  const timestamp = new Date().toISOString();
-  const entry =
-    `\n--- ${timestamp} ---\n` +
-    output.draglines.map((d) => `- ${d}`).join("\n") +
-    "\n";
-  await appendFile(draglineFile, entry);
-  log(`  -> ${output.draglines.length} dragline(s) logged`);
-}
-
-// --- Save escalation ---
-if (output.escalation) {
-  await writeFile(join(BRAIN_DIR, ".escalation"), output.escalation + "\n");
-  log("  -> Escalation flag written");
-}
-
-// --- Validate orientation length ---
-if (output.filesWritten.includes("brain/ORIENTATION.md")) {
-  const orientation = await readFile(join(BRAIN_DIR, "ORIENTATION.md"), "utf-8");
-  const tokenEstimate = Math.ceil(orientation.length / 4);
-  if (tokenEstimate > 2000) {
-    log(`WARN: Orientation is ~${tokenEstimate} tokens (target ~1500). Consider trimming.`);
-  }
+  fatal("Brain did nothing. No files written, no tools used.");
 }
 
 if (!output.filesWritten.includes("brain/ORIENTATION.md")) {

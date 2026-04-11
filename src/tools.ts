@@ -10,23 +10,6 @@ const BRAIN_DIR = join(import.meta.dirname, "..", "brain");
 
 export const tools: Anthropic.Messages.Tool[] = [
   {
-    name: "update_orientation",
-    description:
-      "Rewrite the orientation file. This is your continuity — your state " +
-      "of mind for the next episode. You decide the format. Keep it concise " +
-      "enough to fit in context (~1500 tokens).",
-    input_schema: {
-      type: "object" as const,
-      properties: {
-        content: {
-          type: "string",
-          description: "The full new orientation content in markdown.",
-        },
-      },
-      required: ["content"],
-    },
-  },
-  {
     name: "write_file",
     description:
       "Write a file anywhere under brain/. Creates directories as needed. " +
@@ -36,7 +19,7 @@ export const tools: Anthropic.Messages.Tool[] = [
       properties: {
         path: {
           type: "string",
-          description: "Path relative to brain/ (e.g., 'notes/thought.md', 'data/log.txt').",
+          description: "Path relative to brain/ (e.g., 'ORIENTATION.md', 'notes/thought.md').",
         },
         content: {
           type: "string",
@@ -44,38 +27,6 @@ export const tools: Anthropic.Messages.Tool[] = [
         },
       },
       required: ["path", "content"],
-    },
-  },
-  {
-    name: "note_dragline",
-    description:
-      "Log a thread worth returning to later. Not a task or commitment — " +
-      "a thread noticed but not followed.",
-    input_schema: {
-      type: "object" as const,
-      properties: {
-        thread: {
-          type: "string",
-          description: "Brief description of the thread to return to.",
-        },
-      },
-      required: ["thread"],
-    },
-  },
-  {
-    name: "escalate",
-    description:
-      "Flag that this episode needs deeper processing than the current model " +
-      "can provide. The body will schedule a deeper episode.",
-    input_schema: {
-      type: "object" as const,
-      properties: {
-        reason: {
-          type: "string",
-          description: "Why escalation is needed.",
-        },
-      },
-      required: ["reason"],
     },
   },
   {
@@ -128,17 +79,12 @@ function sanitize(name: string): string {
 // --- Tool response handler ---
 
 export interface EpisodeOutput {
-  draglines: string[];
-  escalation: string | null;
   filesWritten: string[];
 }
 
 // --- Input schemas ---
 
-const orientationSchema = type({ content: "string" });
 const writeFileSchema = type({ path: "string", content: "string" });
-const draglineSchema = type({ thread: "string" });
-const escalateSchema = type({ reason: "string" });
 const evolveSchema = type({
   action: "'create' | 'update' | 'delete'",
   name: "string",
@@ -160,15 +106,6 @@ export async function handleToolCall(
 ): Promise<{ result: string; isError: boolean } | null> {
   try {
     switch (block.name) {
-      case "update_orientation": {
-        const { content } = parseOrThrow(orientationSchema(block.input));
-        const path = join(BRAIN_DIR, "ORIENTATION.md");
-        log("Writing orientation");
-        await writeFile(path, content + "\n");
-        output.filesWritten.push("brain/ORIENTATION.md");
-        return { result: "wrote brain/ORIENTATION.md", isError: false };
-      }
-
       case "write_file": {
         const { path: relPath, content } = parseOrThrow(writeFileSchema(block.input));
         const parts = relPath.split("/").filter(Boolean);
@@ -184,21 +121,16 @@ export async function handleToolCall(
         log(`Writing: brain/${safeParts.join("/")}`);
         await writeFile(fullPath, content + "\n");
         output.filesWritten.push(`brain/${safeParts.join("/")}`);
+
+        // Orientation length check
+        if (safeParts.join("/") === "ORIENTATION.md") {
+          const tokenEstimate = Math.ceil(content.length / 4);
+          if (tokenEstimate > 2000) {
+            log(`WARN: Orientation is ~${tokenEstimate} tokens (target ~1500). Consider trimming.`);
+          }
+        }
+
         return { result: `wrote brain/${safeParts.join("/")}`, isError: false };
-      }
-
-      case "note_dragline": {
-        const { thread } = parseOrThrow(draglineSchema(block.input));
-        log(`Dragline: ${thread}`);
-        output.draglines.push(thread);
-        return { result: "logged", isError: false };
-      }
-
-      case "escalate": {
-        const { reason } = parseOrThrow(escalateSchema(block.input));
-        log(`ESCALATION: ${reason}`);
-        output.escalation = reason;
-        return { result: "escalation flagged", isError: false };
       }
 
       case "evolve": {

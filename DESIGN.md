@@ -45,11 +45,9 @@ Every episode includes observations from the environment — things the brain
 did not generate. This prevents closed-loop reflection where the brain
 processes only its own outputs.
 
-Genesis episodes (first run, detected by empty orientation) get a full body
-self-report: hardware, OS, filesystem, installed tools.
-
-Regular episodes get: timestamp, recent git history, brain directory listing,
-system status.
+Every episode gets: timestamp, recent git history, brain directory listing,
+system status. The body self-report (`brain/body.md`) is generated
+every episode but only included in observations when it changes.
 
 ### Brain's Persistent State
 
@@ -57,19 +55,16 @@ The brain's state lives in `brain/`:
 
 - `CLAUDE.md` — identity/system prompt. The brain can modify this.
 - `ORIENTATION.md` — continuity between episodes. Format is the brain's choice.
+- `CONCEPTS.md` — cognitive tools. Named reasoning patterns the brain owns.
+- `body.md` — body self-report. Written by the body, read by the brain.
 - `tools/` — brain-created tools loaded every episode
-- `draglines.log` — threads noted but not followed
 - Everything else — the brain creates whatever it needs via `write_file`
 
 ### Tools
 
 **Built-in:**
-- `update_orientation` — rewrite the continuity file
-- `write_file` — write any file under brain/
-- `note_dragline` — log a thread for later
-- `escalate` — flag need for deeper processing
-
-**Meta-tool:**
+- `write_file` — write any file under brain/ (orientation length check
+  triggers automatically for ORIENTATION.md)
 - `evolve` — create, update, or delete brain tools (TypeScript, full APIs)
 
 ## Body Infrastructure

@@ -1,3 +1,5 @@
+import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { join, dirname } from "node:path";
 import { $ } from "bun";
 
 // All commands are hardcoded — no user input is interpolated.
@@ -10,11 +12,14 @@ async function exec(cmd: string): Promise<string> {
   }
 }
 
-export async function generateBodyObservations(): Promise<string> {
-  const sections: string[] = ["=== Body Self-Report ===", ""];
+const BRAIN_DIR = join(import.meta.dirname, "..", "brain");
+const BODY_FILE = join(BRAIN_DIR, "body.md");
+
+async function generateBodyReport(): Promise<string> {
+  const sections: string[] = [];
 
   // Hardware
-  sections.push("--- Hardware ---");
+  sections.push("## Hardware");
   sections.push(await exec("uname -a"));
   if (process.platform === "darwin") {
     sections.push(await exec("sysctl -n machdep.cpu.brand_string"));
@@ -26,12 +31,8 @@ export async function generateBodyObservations(): Promise<string> {
     sections.push(await exec("free -h 2>/dev/null | head -2"));
   }
 
-  // Disk
-  sections.push("", "--- Disk ---");
-  sections.push(await exec("df -h / | tail -1"));
-
   // OS
-  sections.push("", "--- OS ---");
+  sections.push("", "## OS");
   if (process.platform === "darwin") {
     sections.push(await exec("sw_vers 2>/dev/null || uname -sr"));
   } else {
@@ -39,23 +40,11 @@ export async function generateBodyObservations(): Promise<string> {
   }
 
   // Network
-  sections.push("", "--- Network ---");
+  sections.push("", "## Network");
   sections.push(await exec("hostname"));
 
-  // Substrate directory
-  sections.push("", "--- Substrate directory ---");
-  sections.push(await exec("ls -la ."));
-
-  // Brain directory
-  sections.push("", "--- Brain directory ---");
-  sections.push(await exec("ls -laR brain/"));
-
-  // Git state
-  sections.push("", "--- Git state ---");
-  sections.push(await exec("git log --oneline -5"));
-
   // Installed tools
-  sections.push("", "--- Installed tools ---");
+  sections.push("", "## Installed Tools");
   const cmds = ["git", "curl", "jq", "bun", "psql", "python3", "node"];
   const versions = await Promise.all(
     cmds.map((cmd) => exec(`${cmd} --version 2>&1 | head -1`)),
@@ -67,8 +56,35 @@ export async function generateBodyObservations(): Promise<string> {
   return sections.join("\n");
 }
 
-// Lightweight observations for every episode — external grounding
-export async function generateEpisodeObservations(): Promise<string> {
+// Returns body diff section for observations, or empty string if unchanged.
+async function updateBodyReport(log: (msg: string) => void): Promise<string> {
+  const current = await generateBodyReport();
+
+  let previous = "";
+  try {
+    previous = (await readFile(BODY_FILE, "utf-8")).trim();
+  } catch {
+    // First run — no previous file
+  }
+
+  await mkdir(dirname(BODY_FILE), { recursive: true });
+  await writeFile(BODY_FILE, current + "\n");
+
+  if (previous === "") {
+    log("Body report: first generation");
+    return "--- Body (first report) ---\n" + current;
+  }
+
+  if (previous === current) {
+    log("Body report: unchanged");
+    return "";
+  }
+
+  log("Body report: changed");
+  return "--- Body (changed since last episode) ---\n" + current;
+}
+
+export async function generateObservations(log: (msg: string) => void): Promise<string> {
   // All commands hardcoded — no user input interpolated.
   const sections: string[] = ["=== Environment ===", ""];
 
@@ -88,13 +104,15 @@ export async function generateEpisodeObservations(): Promise<string> {
   sections.push(await exec("ls -la ."));
   sections.push("");
 
-  sections.push("--- Draglines ---");
-  sections.push(await exec("tail -30 brain/draglines.log"));
-  sections.push("");
-
   sections.push("--- System ---");
   sections.push(await exec("uptime"));
   sections.push(`Disk: ${await exec("df -h / | tail -1")}`);
+
+  // Body report — only included if new or changed
+  const bodySection = await updateBodyReport(log);
+  if (bodySection) {
+    sections.push("", bodySection);
+  }
 
   return sections.join("\n");
 }
