@@ -20,3 +20,4 @@
 - [Feedback: two modes on VPS](feedback_two_modes.md) — interactive (s shell) vs autonomous (wake cycle); same CLAUDE.md, plugins per-user
 - [Feedback: naming practice](feedback_naming_practice.md) — name persistent concepts from nature; names are handles for thought
 - [Feedback: dragline practice](feedback_dragline_practice.md) — log threads without following; spider's safety silk; prevents surfacing
+- [Feedback: research gate](feedback_research_gate.md) — every system-behavior change needs cited research or explicit "unresearched" marker; enforced by commit skill + PreToolUse hook
