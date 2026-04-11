@@ -53,15 +53,17 @@ boot, you get `soma@substrate` — the machine IS the entity.
 
 ## Architecture Direction
 
-Three capacities: memory, attention, intention. Four episode types: reactive,
-reflective, intentional, interactive. Infrastructure exists only to serve these.
+Minimal scaffolding. The brain creates its own cognitive structures.
+
+The body provides: identity, orientation, external observations, tools.
+The brain decides: what to think about, how to organize knowledge, what
+tools to create, what structures to persist.
 
 Knowledge lives in files (git-tracked). DB holds only operational state and
 observations. Never duplicate between them.
 
 The brain's orientation file (`brain/ORIENTATION.md`) is the continuity layer —
-read first every episode, updated last. It carries the state of mind across
-the episodic gap.
+read every episode. The brain decides its format.
 
 ## Operating Context
 

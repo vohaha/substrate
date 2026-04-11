@@ -12,8 +12,7 @@ export interface BrainTool {
 
 export const RESERVED_NAMES = new Set([
   "update_orientation",
-  "write_understanding",
-  "update_domain_index",
+  "write_file",
   "note_dragline",
   "escalate",
   "evolve",

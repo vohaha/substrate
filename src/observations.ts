@@ -66,3 +66,31 @@ export async function generateBodyObservations(): Promise<string> {
 
   return sections.join("\n");
 }
+
+// Lightweight observations for every episode — external grounding
+export async function generateEpisodeObservations(): Promise<string> {
+  // All commands hardcoded — no user input interpolated.
+  const sections: string[] = ["=== Environment ===", ""];
+
+  sections.push(`Timestamp: ${new Date().toISOString()}`);
+  sections.push(`Host: ${await exec("hostname")}`);
+  sections.push("");
+
+  sections.push("--- Recent history ---");
+  sections.push(await exec("git log --oneline -10"));
+  sections.push("");
+
+  sections.push("--- Brain directory ---");
+  sections.push(await exec("find brain/ -not -path 'brain/archive/*' -type f | sort"));
+  sections.push("");
+
+  sections.push("--- Substrate root ---");
+  sections.push(await exec("ls -la ."));
+  sections.push("");
+
+  sections.push("--- System ---");
+  sections.push(await exec("uptime"));
+  sections.push(`Disk: ${await exec("df -h / | tail -1")}`);
+
+  return sections.join("\n");
+}

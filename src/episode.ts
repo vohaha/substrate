@@ -1,9 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { appendFile, readFile, writeFile } from "node:fs/promises";
+import { appendFile, readFile, writeFile, access } from "node:fs/promises";
 import { join } from "node:path";
 import { $ } from "bun";
-import { assembleContext, parseEpisodeType } from "./context.ts";
-import { generateBodyObservations } from "./observations.ts";
+import { assembleContext } from "./context.ts";
+import { generateBodyObservations, generateEpisodeObservations } from "./observations.ts";
 import { tools as builtinTools, handleToolCall, type EpisodeOutput } from "./tools.ts";
 import { loadBrainTools, handleBrainToolCall, type BrainTool } from "./brain-tools.ts";
 
@@ -14,10 +14,6 @@ const MODEL = "claude-sonnet-4-20250514";
 const MAX_TOKENS = 8192;
 
 // --- Episode log ---
-// Every episode leaves a record. Success or failure. Stderr is for the
-// human watching live; the log file is for the body reviewing what happened.
-// Log file is opened immediately and appended on every write — if the process
-// crashes, everything up to the crash is on disk.
 import { mkdirSync, appendFileSync } from "node:fs";
 mkdirSync(LOG_DIR, { recursive: true });
 
@@ -34,28 +30,29 @@ function fatal(msg: string): never {
   process.exit(1);
 }
 
-// --- Parse args ---
-const arg = process.argv[2];
-const episodeType = arg ? parseEpisodeType(arg) : null;
-if (!episodeType) {
-  log("Usage: bun run src/episode.ts <type>[-variant]");
-  log("Types: reactive, reflective, intentional, interactive");
-  log("Variants: reflective-genesis, reflective-deep, reflective-light, ...");
-  process.exit(1);
-}
-
-// --- Set cwd to repo root early (observations depend on it) ---
+// --- Set cwd to repo root ---
 process.chdir(REPO_ROOT);
 
-// --- Generate observations ---
-log(`=== Episode: ${episodeType.raw} ===`);
-log(`Model: ${MODEL}`);
-
-let observations = "";
-if (episodeType.base === "reflective" && episodeType.variant === "genesis") {
-  log("Generating body observations...");
-  observations = await generateBodyObservations();
+// --- Detect genesis (no orientation file) ---
+let isGenesis = false;
+try {
+  await access(join(BRAIN_DIR, "ORIENTATION.md"));
+  const content = await readFile(join(BRAIN_DIR, "ORIENTATION.md"), "utf-8");
+  // Treat empty or seed orientation as genesis
+  isGenesis = content.trim().length < 100;
+} catch {
+  isGenesis = true;
 }
+
+// --- Generate observations ---
+log(`=== Episode ===`);
+log(`Model: ${MODEL}`);
+log(`Genesis: ${isGenesis}`);
+
+log("Generating observations...");
+const observations = isGenesis
+  ? await generateBodyObservations()
+  : await generateEpisodeObservations();
 
 // --- Load brain-created tools ---
 let brainTools: BrainTool[] = await loadBrainTools(log);
@@ -63,7 +60,7 @@ let allTools = [...builtinTools, ...brainTools.map((t) => t.definition)];
 log(`Tools: ${builtinTools.length} built-in, ${brainTools.length} brain-created`);
 
 // --- Assemble context ---
-const { system, userMessage } = await assembleContext(episodeType, observations);
+const { system, userMessage } = await assembleContext(observations);
 
 // --- Call API ---
 log("Calling API...");
@@ -122,7 +119,6 @@ while (turn < MAX_TURNS) {
 
   if (toolBlocks.length === 0) break;
 
-  // Process each tool call: try built-in first, then brain-created
   const toolResults: Anthropic.Messages.ToolResultBlockParam[] = [];
   for (const block of toolBlocks) {
     let callResult = await handleToolCall(block, output, log);
@@ -144,7 +140,6 @@ while (turn < MAX_TURNS) {
     });
   }
 
-  // If the model stopped for tool_use, continue the conversation
   if (response.stop_reason !== "tool_use") break;
 
   // Reload brain tools — evolve may have created/updated/deleted tools
@@ -174,11 +169,9 @@ while (turn < MAX_TURNS) {
   if (response.stop_reason === "max_tokens") {
     log("WARN: Continuation response truncated. Processing available tool calls.");
     truncated = true;
-    // Don't continue the loop — process what we have and validate
     break;
   }
 
-  // Display any reasoning in continuation
   for (const block of response.content) {
     if (block.type === "text") {
       log(block.text);
@@ -209,7 +202,7 @@ if (output.draglines.length > 0) {
   const draglineFile = join(BRAIN_DIR, "draglines.log");
   const timestamp = new Date().toISOString();
   const entry =
-    `\n--- ${timestamp} (${episodeType.raw}) ---\n` +
+    `\n--- ${timestamp} ---\n` +
     output.draglines.map((d) => `- ${d}`).join("\n") +
     "\n";
   await appendFile(draglineFile, entry);
@@ -222,37 +215,17 @@ if (output.escalation) {
   log("  -> Escalation flag written");
 }
 
-// --- Validate before commit ---
-const orientationPath = join(BRAIN_DIR, "ORIENTATION.md");
-let valid = true;
-
+// --- Validate orientation length ---
 if (output.filesWritten.includes("brain/ORIENTATION.md")) {
-  const orientation = await readFile(orientationPath, "utf-8");
+  const orientation = await readFile(join(BRAIN_DIR, "ORIENTATION.md"), "utf-8");
   const tokenEstimate = Math.ceil(orientation.length / 4);
   if (tokenEstimate > 2000) {
-    log(`WARN: Orientation is ~${tokenEstimate} tokens (limit 1500). Too long.`);
-    valid = false;
-  }
-  const requiredSections = ["Active Intentions", "Open Edges", "Recent Shifts", "Register"];
-  for (const section of requiredSections) {
-    if (!orientation.includes(section)) {
-      log(`WARN: Orientation missing section: ${section}`);
-      valid = false;
-    }
+    log(`WARN: Orientation is ~${tokenEstimate} tokens (target ~1500). Consider trimming.`);
   }
 }
 
 if (!output.filesWritten.includes("brain/ORIENTATION.md")) {
-  log("WARN: Brain did not update orientation. Episode may be incomplete.");
-  if (truncated) {
-    log("WARN: Response was truncated — orientation may have been cut off.");
-    valid = false;
-  }
-}
-
-if (!valid) {
-  log("Run 'git diff brain/' to inspect, then commit or reset manually.");
-  fatal("Validation failed. Changes left unstaged for manual review.");
+  log("WARN: Brain did not update orientation.");
 }
 
 // --- Git commit and push to main ---
@@ -260,8 +233,7 @@ const status = await $`git status --porcelain -- brain/`.quiet().text();
 if (status.trim()) {
   const timestamp = new Date().toISOString();
   const commitMsg =
-    `episode(${episodeType.raw}): ${timestamp}\n\n` +
-    `Type: ${episodeType.raw}\n` +
+    `episode: ${timestamp}\n\n` +
     `Model: ${MODEL}\n` +
     `Tokens: ${response.usage.input_tokens} in, ${response.usage.output_tokens} out\n` +
     `Files: ${output.filesWritten.join(", ")}`;

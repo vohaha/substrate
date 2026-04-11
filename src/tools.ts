@@ -1,11 +1,10 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { type } from "arktype";
-import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
+import { mkdir, writeFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { RESERVED_NAMES, BRAIN_TOOLS_DIR, importBrainTool } from "./brain-tools.ts";
 
 const BRAIN_DIR = join(import.meta.dirname, "..", "brain");
-const UNDERSTANDING_DIR = join(BRAIN_DIR, "understanding");
 
 // --- Tool definitions ---
 
@@ -13,75 +12,38 @@ export const tools: Anthropic.Messages.Tool[] = [
   {
     name: "update_orientation",
     description:
-      "Rewrite the orientation file. This is your continuity — your state of mind " +
-      "for the next episode. First person, under 1500 tokens. Include: active " +
-      "intentions (2-3), open edges, recent shifts, register " +
-      "(certainty/focus/energy/curiosity). " +
-      "Do NOT include domain index content here — use update_domain_index for that.",
+      "Rewrite the orientation file. This is your continuity — your state " +
+      "of mind for the next episode. You decide the format. Keep it concise " +
+      "enough to fit in context (~1500 tokens).",
     input_schema: {
       type: "object" as const,
       properties: {
-        rationale: {
-          type: "string",
-          description:
-            "What is changing from the current orientation and why. " +
-            "Required even on genesis — state what you are establishing.",
-        },
         content: {
           type: "string",
           description: "The full new orientation content in markdown.",
         },
       },
-      required: ["rationale", "content"],
+      required: ["content"],
     },
   },
   {
-    name: "write_understanding",
+    name: "write_file",
     description:
-      "Create or update an understanding file. Each file is a living document " +
-      "about one concept. Include: what I think, confidence, connections, what " +
-      "I considered, open questions, last refined date.",
+      "Write a file anywhere under brain/. Creates directories as needed. " +
+      "You decide the structure — nothing is prescribed.",
     input_schema: {
       type: "object" as const,
       properties: {
-        rationale: {
+        path: {
           type: "string",
-          description: "What is changing or being established, and why. Reconsolidation safeguard.",
-        },
-        domain: {
-          type: "string",
-          description: "Domain directory name (e.g., 'self', 'infrastructure'). Created if needed.",
-        },
-        filename: {
-          type: "string",
-          description: "File name without path (e.g., 'body-architecture.md').",
+          description: "Path relative to brain/ (e.g., 'notes/thought.md', 'data/log.txt').",
         },
         content: {
           type: "string",
-          description: "The full file content in markdown.",
+          description: "The full file content.",
         },
       },
-      required: ["rationale", "domain", "filename", "content"],
-    },
-  },
-  {
-    name: "update_domain_index",
-    description:
-      "Rewrite the domain index. One line per domain with scope keywords. " +
-      "Keep under 15 domains. This is always loaded — every token counts.",
-    input_schema: {
-      type: "object" as const,
-      properties: {
-        rationale: {
-          type: "string",
-          description: "What domains are being added or changed.",
-        },
-        content: {
-          type: "string",
-          description: "The full domain index content.",
-        },
-      },
-      required: ["rationale", "content"],
+      required: ["path", "content"],
     },
   },
   {
@@ -153,34 +115,6 @@ export const tools: Anthropic.Messages.Tool[] = [
   },
 ];
 
-// --- Domain sub-index maintenance ---
-
-async function updateSubIndex(domainDir: string, filename: string, rationale: string): Promise<void> {
-  const indexPath = join(domainDir, "INDEX.md");
-  const domainName = domainDir.split("/").pop() ?? "unknown";
-  let lines: string[];
-
-  try {
-    const existing = await readFile(indexPath, "utf-8");
-    lines = existing.split("\n");
-  } catch {
-    lines = [`# ${domainName} — Domain Sub-Index`, ""];
-  }
-
-  // Check if file already listed, update if so
-  const entryPrefix = `- ${filename}`;
-  const newEntry = `- ${filename} — ${rationale}`;
-  const existingIdx = lines.findIndex((l) => l.startsWith(entryPrefix));
-
-  if (existingIdx >= 0) {
-    lines[existingIdx] = newEntry;
-  } else {
-    lines.push(newEntry);
-  }
-
-  await writeFile(indexPath, lines.join("\n") + "\n");
-}
-
 // --- Sanitize path components ---
 
 function sanitize(name: string): string {
@@ -201,14 +135,8 @@ export interface EpisodeOutput {
 
 // --- Input schemas ---
 
-const orientationSchema = type({ rationale: "string", content: "string" });
-const understandingSchema = type({
-  rationale: "string",
-  domain: "string",
-  filename: "string",
-  content: "string",
-});
-const domainIndexSchema = type({ rationale: "string", content: "string" });
+const orientationSchema = type({ content: "string" });
+const writeFileSchema = type({ path: "string", content: "string" });
 const draglineSchema = type({ thread: "string" });
 const escalateSchema = type({ reason: "string" });
 const evolveSchema = type({
@@ -233,35 +161,30 @@ export async function handleToolCall(
   try {
     switch (block.name) {
       case "update_orientation": {
-        const { rationale, content } = parseOrThrow(orientationSchema(block.input));
+        const { content } = parseOrThrow(orientationSchema(block.input));
         const path = join(BRAIN_DIR, "ORIENTATION.md");
-        log(`Writing orientation (rationale: ${rationale})`);
+        log("Writing orientation");
         await writeFile(path, content + "\n");
         output.filesWritten.push("brain/ORIENTATION.md");
         return { result: "wrote brain/ORIENTATION.md", isError: false };
       }
 
-      case "write_understanding": {
-        const { rationale, domain, filename, content } = parseOrThrow(understandingSchema(block.input));
-        const safeDomain = sanitize(domain);
-        const safeFilename = sanitize(filename);
-        const dir = join(UNDERSTANDING_DIR, safeDomain);
-        await mkdir(dir, { recursive: true });
-        const path = join(dir, safeFilename);
-        log(`Writing understanding: ${safeDomain}/${safeFilename} (rationale: ${rationale})`);
-        await writeFile(path, content + "\n");
-        await updateSubIndex(dir, safeFilename, rationale);
-        output.filesWritten.push(`brain/understanding/${safeDomain}/${safeFilename}`);
-        return { result: `wrote brain/understanding/${safeDomain}/${safeFilename}`, isError: false };
-      }
+      case "write_file": {
+        const { path: relPath, content } = parseOrThrow(writeFileSchema(block.input));
+        const parts = relPath.split("/").filter(Boolean);
+        if (parts.length === 0) {
+          return { result: "error: path is empty", isError: true };
+        }
+        const safeParts = parts.map(sanitize);
+        const fullPath = join(BRAIN_DIR, ...safeParts);
 
-      case "update_domain_index": {
-        const { rationale, content } = parseOrThrow(domainIndexSchema(block.input));
-        const path = join(UNDERSTANDING_DIR, "INDEX.md");
-        log(`Updating domain index (rationale: ${rationale})`);
-        await writeFile(path, content + "\n");
-        output.filesWritten.push("brain/understanding/INDEX.md");
-        return { result: "wrote brain/understanding/INDEX.md", isError: false };
+        const parentDir = join(BRAIN_DIR, ...safeParts.slice(0, -1));
+        await mkdir(parentDir, { recursive: true });
+
+        log(`Writing: brain/${safeParts.join("/")}`);
+        await writeFile(fullPath, content + "\n");
+        output.filesWritten.push(`brain/${safeParts.join("/")}`);
+        return { result: `wrote brain/${safeParts.join("/")}`, isError: false };
       }
 
       case "note_dragline": {
@@ -308,7 +231,6 @@ export async function handleToolCall(
         await mkdir(toolsDir, { recursive: true });
         await writeFile(filePath, source + "\n");
 
-        // Validate by importing — catches syntax errors and missing exports
         try {
           await importBrainTool(filePath);
         } catch (err) {
