@@ -87,6 +87,7 @@ tools, observation format, episode flow.
 `DESIGN.md`, `bin/episode`.
 
 When changing these files, every commit must include one of:
+
 - `Basis: <mechanism> (<source>)` — cited research or documented mechanism
 - `Unresearched: <hypothesis>. Risk: <what could be wrong>` — explicit gap
 
