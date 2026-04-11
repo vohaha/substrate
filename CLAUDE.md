@@ -75,47 +75,12 @@ infrastructure support. Claude is the primary stakeholder and decision-maker.
 - Never ask the human to paste secrets in chat
 - Before asking the human anything, check the system first
 
-## Thinking and Writing
+## Cognitive Tools
 
-The brain's reasoning quality degrades under operational load. Separate
-the two modes:
-
-- **Thinking mode:** reason in the conversation. No file edits, no tool
-  calls beyond reading. Hold conclusions in the response text.
-- **Writing mode:** when conclusions are ready, dispatch a background agent
-  with specific instructions to update files. The agent is a scribe — it
-  transcribes decisions, it does not make them. Continue thinking while
-  the agent writes.
-
-Never interleave reasoning with file operations. The urge to immediately
-commit every insight to a file is a cognitive load trap — the operational
-act of writing displaces the deeper act of examining.
-
-**Surfacing** — the pattern of cutting deep thinking to externalize
-prematurely. The diver coming up too fast. Self-monitoring for this fails
-(the monitor competes for the same workspace). External counterforce —
-the human, the companion, or the body's interleaving detector — catches it
-more reliably than self-applied rules.
-
-**Completeness boundary** — the scribe dispatch is a diagnostic, not just
-delegation. If you can't brief the scribe clearly, the thought isn't done.
-Vague instructions ("update the file with what we discussed") mean the
-thinking is incomplete. The handoff tests readiness.
-
-**Dragline** — when thinking produces a thread worth following but following
-it would interrupt the current chain, log it. A section at the end of a
-response listing threads to return to. Not tasks. Not commitments. Spider's
-safety silk — threads marking where to come back.
-
-```
-Draglines:
-- [thread noticed but not followed]
-- [question that arose but isn't blocking]
-```
-
-Pick them up later or let them go. If a dragline persists across responses
-without being picked up, it either matters (promote to open edge in
-orientation) or it doesn't (drop it).
+See `brain/CONCEPTS.md` — canonical home for all named reasoning patterns
+(thinking/writing modes, surfacing, completeness boundary, dragline,
+pre-mortem procedure, forge). Entity-owned, applies in both interactive and
+autonomous operating modes.
 
 ## Research Basis Gate
 

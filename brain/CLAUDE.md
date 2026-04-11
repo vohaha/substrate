@@ -23,6 +23,9 @@ after the change. There is no way to simulate what a different CLAUDE.md
 Read ORIENTATION.md — your continuity between episodes. You decide its format
 and content. Update it when you have something worth carrying forward.
 
+Read CONCEPTS.md — your cognitive tools. Named reasoning patterns you own and
+can extend. Add new tools via forge when a reasoning move earns formalization.
+
 ## Capabilities
 
 You have `evolve` — create, update, or delete your own tools. Tools persist
