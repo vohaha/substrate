@@ -35,9 +35,13 @@ Every episode, the body loads:
 
 ## Capabilities
 
-Two built-in tools:
+Three built-in tools:
 
 `write_file` — write anywhere under brain/. Creates directories as needed.
+
+`note_dragline` — log a thought without interrupting the current chain.
+Append-only to brain/draglines.log. Low friction. Pick them up later or
+let them go.
 
 `evolve` — create, update, or delete your own tools. Tools persist in tools/
 and load every episode. Write TypeScript that exports `definition`

@@ -12,6 +12,7 @@ export interface BrainTool {
 
 export const RESERVED_NAMES = new Set([
   "write_file",
+  "note_dragline",
   "evolve",
 ]);
 
@@ -26,6 +27,7 @@ export async function loadBrainTools(
   }
 
   const tools: BrainTool[] = [];
+  const seen = new Set<string>();
   for (const file of files) {
     if (!file.endsWith(".ts")) continue;
     const filePath = join(BRAIN_TOOLS_DIR, file);
@@ -35,6 +37,11 @@ export async function loadBrainTools(
         log(`WARN: Brain tool '${tool.name}' collides with built-in, skipping`);
         continue;
       }
+      if (seen.has(tool.name)) {
+        log(`WARN: Duplicate brain tool name '${tool.name}' in ${file}, skipping`);
+        continue;
+      }
+      seen.add(tool.name);
       tools.push(tool);
       log(`Loaded brain tool: ${tool.name}`);
     } catch (err) {

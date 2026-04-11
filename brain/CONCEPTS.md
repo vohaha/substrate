@@ -20,6 +20,12 @@ decisions, it does not make them. Continue thinking while the agent writes.
 The urge to immediately commit every insight to a file is a cognitive load
 trap — the operational act of writing displaces the deeper act of examining.
 
+**Episodic constraint:** thinking mode is intra-episode — valid across turns
+within a single episode. But the episode boundary is a hard wall: nothing
+persists without externalization. Think freely within the episode, but write
+before it ends. An episode that produces zero output (no files, no draglines)
+is a lost episode — the thought dies with the context.
+
 ---
 
 ## Surfacing

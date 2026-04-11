@@ -12,8 +12,8 @@ async function exec(cmd: string): Promise<string> {
   }
 }
 
-const BRAIN_DIR = join(import.meta.dirname, "..", "brain");
-const BODY_FILE = join(BRAIN_DIR, "body.md");
+const REPO_ROOT = join(import.meta.dirname, "..");
+const BODY_FILE = join(REPO_ROOT, "body.md");
 
 async function generateBodyReport(): Promise<string> {
   const sections: string[] = [];

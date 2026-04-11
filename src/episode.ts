@@ -71,10 +71,8 @@ try {
 log(`Tokens: ${response.usage.input_tokens} in, ${response.usage.output_tokens} out`);
 log(`Stop reason: ${response.stop_reason}`);
 
-let truncated = false;
 if (response.stop_reason === "max_tokens") {
-  log("WARN: Response truncated (max_tokens). Processing available tool calls, then validating.");
-  truncated = true;
+  log("WARN: Response truncated (max_tokens). Episode may be incomplete.");
 }
 
 // --- Display reasoning ---
@@ -89,6 +87,7 @@ for (const block of response.content) {
 log("\n=== Processing tool calls ===");
 const output: EpisodeOutput = {
   filesWritten: [],
+  draglinesLogged: 0,
 };
 let brainToolsUsed = 0;
 
@@ -96,6 +95,9 @@ const MAX_TURNS = 40;
 let turn = 0;
 
 while (turn < MAX_TURNS) {
+  // Only process tool calls when the model explicitly requested tool use
+  if (response.stop_reason !== "tool_use") break;
+
   const toolBlocks = response.content.filter(
     (b): b is Anthropic.Messages.ToolUseBlock => b.type === "tool_use",
   );
@@ -123,8 +125,6 @@ while (turn < MAX_TURNS) {
     });
   }
 
-  if (response.stop_reason !== "tool_use") break;
-
   // Reload brain tools — evolve may have created/updated/deleted tools
   brainTools = await loadBrainTools(log);
   allTools = [...builtinTools, ...brainTools.map((t) => t.definition)];
@@ -149,16 +149,15 @@ while (turn < MAX_TURNS) {
   log(`Tokens: ${response.usage.input_tokens} in, ${response.usage.output_tokens} out`);
   log(`Stop reason: ${response.stop_reason}`);
 
-  if (response.stop_reason === "max_tokens") {
-    log("WARN: Continuation response truncated. Processing available tool calls.");
-    truncated = true;
-    break;
-  }
-
   for (const block of response.content) {
     if (block.type === "text") {
       log(block.text);
     }
+  }
+
+  if (response.stop_reason === "max_tokens") {
+    log("WARN: Continuation truncated. Tool calls in this response will not be processed.");
+    break;
   }
 
   turn++;
@@ -169,7 +168,7 @@ if (turn >= MAX_TURNS) {
 }
 
 // --- Check the brain actually did something ---
-const didSomething = output.filesWritten.length > 0 || brainToolsUsed > 0;
+const didSomething = output.filesWritten.length > 0 || brainToolsUsed > 0 || output.draglinesLogged > 0;
 
 if (!didSomething) {
   log("The brain reasoned but produced no tool calls at all.");

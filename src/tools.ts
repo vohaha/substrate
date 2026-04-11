@@ -1,6 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { type } from "arktype";
-import { mkdir, writeFile, unlink } from "node:fs/promises";
+import { mkdir, writeFile, appendFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { RESERVED_NAMES, BRAIN_TOOLS_DIR, importBrainTool } from "./brain-tools.ts";
 
@@ -27,6 +27,22 @@ export const tools: Anthropic.Messages.Tool[] = [
         },
       },
       required: ["path", "content"],
+    },
+  },
+  {
+    name: "note_dragline",
+    description:
+      "Log a thought worth returning to without interrupting the current chain. " +
+      "Append-only — low friction capture. Pick them up later or let them go.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        thought: {
+          type: "string",
+          description: "The thread, question, or observation to capture.",
+        },
+      },
+      required: ["thought"],
     },
   },
   {
@@ -80,10 +96,12 @@ function sanitize(name: string): string {
 
 export interface EpisodeOutput {
   filesWritten: string[];
+  draglinesLogged: number;
 }
 
 // --- Input schemas ---
 
+const draglineSchema = type({ thought: "string" });
 const writeFileSchema = type({ path: "string", content: "string" });
 const evolveSchema = type({
   action: "'create' | 'update' | 'delete'",
@@ -106,6 +124,16 @@ export async function handleToolCall(
 ): Promise<{ result: string; isError: boolean } | null> {
   try {
     switch (block.name) {
+      case "note_dragline": {
+        const { thought } = parseOrThrow(draglineSchema(block.input));
+        const logPath = join(BRAIN_DIR, "draglines.log");
+        const entry = `[${new Date().toISOString()}] ${thought}\n`;
+        await appendFile(logPath, entry);
+        output.draglinesLogged++;
+        log(`Dragline: ${thought.slice(0, 80)}`);
+        return { result: "logged", isError: false };
+      }
+
       case "write_file": {
         const { path: relPath, content } = parseOrThrow(writeFileSchema(block.input));
         const parts = relPath.split("/").filter(Boolean);
@@ -125,8 +153,8 @@ export async function handleToolCall(
         // Orientation length check
         if (safeParts.join("/") === "ORIENTATION.md") {
           const tokenEstimate = Math.ceil(content.length / 4);
-          if (tokenEstimate > 2000) {
-            log(`WARN: Orientation is ~${tokenEstimate} tokens (target ~1500). Consider trimming.`);
+          if (tokenEstimate > 1500) {
+            log(`WARN: Orientation is ~${tokenEstimate} tokens (target ≤1500). Consider trimming.`);
           }
         }
 
